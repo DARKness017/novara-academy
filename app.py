@@ -8,6 +8,26 @@ from supabase import create_client, Client
 # --- 1. Page Config & Theming ---
 st.set_page_config(page_title="Novara Academy - Adaptive Engine", page_icon="🎓", layout="centered")
 
+# --- Custom CSS Styling for Navy Buttons ---
+st.markdown("""
+    <style>
+    /* Target all Streamlit buttons to be Deep Navy with white text and rounded corners */
+    .stButton>button {
+        background-color: #0B1B3D !important;
+        color: white !important;
+        border-radius: 8px !important;
+        border: 1px solid #C09B5A !important;
+        font-weight: 500;
+    }
+    /* Hover effect: flips to Champagne Gold with Navy text */
+    .stButton>button:hover {
+        background-color: #C09B5A !important;
+        color: #0B1B3D !important;
+        border: 1px solid #0B1B3D !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # --- 2. Cloud Database Connection (Supabase) ---
 @st.cache_resource
 def init_connection():
@@ -147,7 +167,7 @@ def dashboard_screen():
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("🚪 Log Out", use_container_width=True):
+        if st.button("🔚 Log Out", use_container_width=True):
             st.session_state.clear()
             st.rerun()
         st.write("")

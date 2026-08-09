@@ -8,21 +8,34 @@ from supabase import create_client, Client
 # --- 1. Page Config & Theming ---
 st.set_page_config(page_title="Novara Academy - Adaptive Engine", page_icon="🎓", layout="centered")
 
-# --- Custom CSS Styling for Navy Buttons ---
+# --- Custom CSS Styling ---
 st.markdown("""
     <style>
-    /* Target all Streamlit buttons to be Deep Navy with white text and rounded corners */
-    .stButton>button {
+    /* Default buttons (Unit buttons) = Deep Navy */
+    .stButton > button {
         background-color: #0B1B3D !important;
         color: white !important;
         border-radius: 8px !important;
         border: 1px solid #C09B5A !important;
         font-weight: 500;
     }
-    /* Hover effect: flips to Champagne Gold with Navy text */
-    .stButton>button:hover {
+    .stButton > button:hover {
         background-color: #C09B5A !important;
         color: #0B1B3D !important;
+        border: 1px solid #0B1B3D !important;
+    }
+    
+    /* Primary buttons (Log Out, Start Quiz, Analytics, etc.) = Champagne Gold */
+    .stButton > button[kind="primary"] {
+        background-color: #C09B5A !important;
+        color: #0B1B3D !important;
+        border-radius: 8px !important;
+        border: 1px solid #0B1B3D !important;
+        font-weight: 600;
+    }
+    .stButton > button[kind="primary"]:hover {
+        background-color: #0B1B3D !important;
+        color: white !important;
         border: 1px solid #0B1B3D !important;
     }
     </style>
@@ -31,14 +44,13 @@ st.markdown("""
 # --- 2. Cloud Database Connection (Supabase) ---
 @st.cache_resource
 def init_connection():
-    # This securely pulls the keys you saved in your secrets.toml file!
     url = st.secrets["SUPABASE_URL"]
     key = st.secrets["SUPABASE_KEY"]
     return create_client(url, key)
 
 supabase = init_connection()
 
-# Password Hashing Helper (Keeps student passwords safe)
+# Password Hashing Helper
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
@@ -65,17 +77,15 @@ if 'quiz_score' not in st.session_state:
 # --- 4. Core Application Logic ---
 def fetch_questions(unit=None):
     if unit:
-        # Changed to lowercase 'questions'
         response = supabase.table("questions").select("*").eq("unit_number", unit).execute()
     else:
-        # Changed to lowercase 'questions'
         response = supabase.table("questions").select("*").execute()
     return response.data
 
 def start_quiz(unit=None):
     questions = fetch_questions(unit)
     if not questions:
-        st.warning("No questions found for this selection yet! (Only Units 1, 2, 3, 6, 7, 8, 9, 10 are seeded right now)")
+        st.warning("No questions found for this selection yet! Please try another unit.")
         return
     st.session_state.quiz_questions = questions
     st.session_state.current_q_index = 0
@@ -95,7 +105,6 @@ def submit_answer(selected_option):
     if is_correct:
         st.session_state.quiz_score += 1
 
-    # Changed to lowercase 'attempts'
     supabase.table("attempts").insert({
         "user_id": st.session_state.user_id,
         "question_id": current_q['question_id'],
@@ -122,7 +131,6 @@ def login_screen():
         if st.button("Log In", type="primary"):
             if login_email and login_password:
                 hashed_pw = hash_password(login_password)
-                # Changed to lowercase 'users'
                 response = supabase.table("users").select("*").eq("email", login_email).eq("password_hash", hashed_pw).execute()
                 if response.data:
                     user = response.data[0]
@@ -145,12 +153,10 @@ def login_screen():
         if st.button("Create Account", type="primary"):
             if reg_username and reg_email and reg_password:
                 hashed_pw = hash_password(reg_password)
-                # Changed to lowercase 'users'
                 check = supabase.table("users").select("*").eq("email", reg_email).execute()
                 if check.data:
                     st.error("An account with this email already exists.")
                 else:
-                    # Changed to lowercase 'users'
                     new_user = supabase.table("users").insert({
                         "username": reg_username,
                         "email": reg_email,
@@ -167,13 +173,13 @@ def dashboard_screen():
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("🔚 Log Out", use_container_width=True):
+        if st.button("↩️ Log Out", use_container_width=True, type="primary"):
             st.session_state.clear()
             st.rerun()
         st.write("")
         if st.button("🚀 Start Full Adaptive Quiz", type="primary", use_container_width=True):
             start_quiz()
-        if st.button("📊 View All-Time Analytics", use_container_width=True):
+        if st.button("📊 View All-Time Analytics", use_container_width=True, type="primary"):
             st.session_state.current_screen = "analytics"
             st.rerun()
             
@@ -227,7 +233,6 @@ def quiz_screen():
 def analytics_screen():
     st.markdown("<h1 style='text-align: center; color: #0B1B3D;'>📊 Performance Analytics</h1>", unsafe_allow_html=True)
     
-    # Changed to lowercase 'attempts' and 'questions'
     response = supabase.table("attempts").select("is_correct, questions(unit_number)").eq("user_id", st.session_state.user_id).execute()
     data = response.data
     
@@ -249,7 +254,6 @@ def analytics_screen():
             ax.axhline(60, color='#C09B5A', linestyle='--', label='60% Threshold')
             ax.legend()
             
-            # Clean layout formatting
             ax.spines['top'].set_visible(False)
             ax.spines['right'].set_visible(False)
             plt.xticks(rotation=0)

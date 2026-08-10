@@ -28,7 +28,6 @@ st.markdown("""
     }
 
     /* --- 2. NOVARA ACADEMY BUTTON STYLING --- */
-    /* Only the 10 Unit buttons = Deep Navy */
     .stButton > button {
         background-color: #0B1B3D !important;
         color: white !important;
@@ -42,7 +41,6 @@ st.markdown("""
         border: 1px solid #0B1B3D !important;
     }
     
-    /* Primary buttons (Log Out, Start Quiz, Analytics, Difficulty selectors) = Champagne Gold */
     .stButton > button[kind="primary"] {
         background-color: #C09B5A !important;
         color: #0B1B3D !important;
@@ -54,6 +52,40 @@ st.markdown("""
         background-color: #0B1B3D !important;
         color: white !important;
         border: 1px solid #0B1B3D !important;
+    }
+
+    /* --- 3. NATIVE MARKDOWN TABLE STYLING (For Perfect Math Rendering) --- */
+    .stMarkdown table {
+        background-color: #0B1B3D !important;
+        border: 2px solid #C09B5A !important;
+        border-top: none !important;
+        border-bottom-left-radius: 12px !important;
+        border-bottom-right-radius: 12px !important;
+        color: white !important;
+        width: 100% !important;
+        margin-top: -10px !important; /* Pulls it flush with the header div */
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+    }
+    .stMarkdown th {
+        display: none !important; /* Hides the default markdown headers */
+    }
+    .stMarkdown td {
+        border-bottom: 1px solid #C09B5A !important;
+        border-top: none !important;
+        border-right: none !important;
+        border-left: none !important;
+        padding: 15px !important;
+        vertical-align: top !important;
+        font-size: 14px !important;
+    }
+    .stMarkdown tr:last-child td {
+        border-bottom: none !important; /* Removes border from last row */
+    }
+    /* Style the left column specifically to be Gold and Bold */
+    .stMarkdown td:first-child {
+        color: #C09B5A !important;
+        font-weight: bold !important;
+        width: 28% !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -93,7 +125,7 @@ if 'selected_unit' not in st.session_state:
 if 'selected_unit_name' not in st.session_state:
     st.session_state.selected_unit_name = ""
 
-# --- 4. Core Application Logic (With Adaptive Engine & Difficulty Filtering) ---
+# --- 4. Core Application Logic ---
 def start_quiz(unit=None):
     if unit:
         response = supabase.table("questions").select("*").eq("unit_number", unit).execute()
@@ -132,7 +164,6 @@ def start_quiz(unit=None):
             if questions:
                 random.shuffle(questions)
 
-    # Filter by selected difficulty if they didn't choose "All"
     if st.session_state.difficulty != "All":
         questions = [q for q in questions if q.get('difficulty') == st.session_state.difficulty]
         
@@ -236,7 +267,7 @@ def dashboard_screen():
             st.rerun()
         st.write("")
         if st.button("🚀 Start Full Adaptive Quiz", type="primary", use_container_width=True):
-            start_quiz() # No unit means full adaptive engine
+            start_quiz()
         if st.button("📊 View All-Time Analytics", use_container_width=True, type="primary"):
             st.session_state.current_screen = "analytics"
             st.rerun()
@@ -257,17 +288,14 @@ def dashboard_screen():
         "Unit 10: Infinite Sequences & Series"
     ]
     
-    # Render units in pairs. Clicking any unit opens its dedicated Unit Detail Page.
     for i in range(0, 10, 2):
         c1, c2 = st.columns(2)
-        
         with c1:
             if st.button(units[i], use_container_width=True):
                 st.session_state.selected_unit = i + 1
                 st.session_state.selected_unit_name = units[i]
                 st.session_state.current_screen = "unit_detail"
                 st.rerun()
-                
         with c2:
             if st.button(units[i+1], use_container_width=True):
                 st.session_state.selected_unit = i + 2
@@ -286,7 +314,6 @@ def unit_detail_screen():
     st.markdown(f"<h1 style='text-align: center; color: #0B1B3D;'>{unit_name}</h1>", unsafe_allow_html=True)
     st.write("---")
     
-    # 1. Difficulty Level Selector for this Unit
     st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>Select Difficulty Level</h3>", unsafe_allow_html=True)
     diff_col1, diff_col2, diff_col3, diff_col4 = st.columns(4)
     with diff_col1:
@@ -307,155 +334,45 @@ def unit_detail_screen():
     st.write("---")
     
     # 2. Formula Cheat Sheet for this Unit
-    st.markdown(f"<h3 style='text-align: center; color: #0B1B3D;'>📝 {unit_name} - Formula Cheat Sheet</h3>", unsafe_allow_html=True)
-    
     cheat_sheets = {
-        1: """
-        <div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-radius: 12px; padding: 22px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: sans-serif; margin-bottom: 20px;">
-            <h3 style="color: #C09B5A; text-align: center; margin-top: 0; font-family: sans-serif;">Unit 1: Limits & Continuity — Quick Reference</h3>
-            <hr style="border-color: #C09B5A; margin-bottom: 15px;">
-            <table style="width: 100%; color: white; border-collapse: collapse; font-size: 14px;">
-                <tr style="border-bottom: 1px solid #C09B5A;">
-                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; width: 28%; vertical-align: top;">1.1–1.4<br>Intro to Limits</td>
-                    <td style="padding: 10px; vertical-align: top;">
-                        <b>AROC (secant slope):</b> $\\text{AROC}=\\frac{f(b)-f(a)}{b-a}$<br><br>
-                        <b>IROC (tangent slope):</b> $\\text{IROC}=\\lim_{h\\to0}\\frac{f(x+h)-f(x)}{h}$<br><br>
-                        $\\lim_{x\\to c}f(x)=L$ means $f(x)\\to L$ as $x\\to c$ from both sides<br><br>
-                        Left-hand: $\\lim_{x\\to c^{-}}f(x)$ &nbsp;|&nbsp; Right-hand: $\\lim_{x\\to c^{+}}f(x)$<br><br>
-                        <b>Existence:</b> $\\lim_{x\\to c}f(x)=L \\iff \\lim_{x\\to c^{-}}f(x)=\\lim_{x\\to c^{+}}f(x)=L$
-                    </td>
-                </tr>
-                <tr style="border-bottom: 1px solid #C09B5A;">
-                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">1.5–1.7<br>Algebraic Properties</td>
-                    <td style="padding: 10px; vertical-align: top;">
-                        Assume $\\lim_{x\\to c}f(x)=L,\\ \\lim_{x\\to c}g(x)=M$:<br>
-                        • <b>Sum/Diff:</b> $\\lim[f(x)\\pm g(x)]=L\\pm M$<br>
-                        • <b>Product:</b> $\\lim[f(x)g(x)]=LM$<br>
-                        • <b>Quotient:</b> $\\lim\\frac{f(x)}{g(x)}=\\frac{L}{M}\\ (M\\neq0)$<br>
-                        • <b>Constant:</b> $\\lim[kf(x)]=kL$<br>
-                        • <b>Power/Root:</b> $\\lim[f(x)]^n=L^n$, &nbsp; $\\lim\\sqrt[n]{f(x)}=\\sqrt[n]{L}$<br><br>
-                        <b>1. Factor:</b> cancel common factors (e.g., $\\frac{x^2-4}{x-2}=\\frac{(x-2)(x+2)}{x-2}$)<br>
-                        <b>2. Rationalize:</b> multiply by conjugate $(\\sqrt{a}-b)(\\sqrt{a}+b)=a-b^2$<br>
-                        <b>3. Complex Fractions:</b> multiply by LCD to simplify
-                    </td>
-                </tr>
-                <tr style="border-bottom: 1px solid #C09B5A;">
-                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">1.8<br>Squeeze Theorem</td>
-                    <td style="padding: 10px; vertical-align: top;">
-                        If $g(x)\\le f(x)\\le h(x)$ for all $x$ near $c$ (except possibly at $c$), and $\\lim_{x\\to c}g(x)=\\lim_{x\\to c}h(x)=L$, then $\\lim_{x\\to c}f(x)=L$
-                    </td>
-                </tr>
-                <tr style="border-bottom: 1px solid #C09B5A;">
-                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">1.10–1.13<br>Continuity & Discontinuities</td>
-                    <td style="padding: 10px; vertical-align: top;">
-                        $f(x)$ is continuous at $x=c$ iff:<br>
-                        <b>1.</b> $f(c)$ is defined &nbsp; <b>2.</b> $\\lim_{x\\to c}f(x)$ exists &nbsp; <b>3.</b> $\\lim_{x\\to c}f(x)=f(c)$<br><br>
-                        <table style="width: 100%; border: 1px solid #C09B5A; margin: 8px 0; font-size: 13px; border-collapse: collapse;">
-                            <tr style="background-color: #122a5c; color: #C09B5A;">
-                                <th style="padding: 6px; text-align: left; border: 1px solid #C09B5A;">Type</th>
-                                <th style="padding: 6px; text-align: left; border: 1px solid #C09B5A;">Condition</th>
-                                <th style="padding: 6px; text-align: left; border: 1px solid #C09B5A;">Graphic</th>
-                            </tr>
-                            <tr>
-                                <td style="padding: 6px; border: 1px solid #C09B5A;">Removable</td>
-                                <td style="padding: 6px; border: 1px solid #C09B5A;">$\\lim_{x\\to c}f(x)$ exists, $\\neq f(c)$</td>
-                                <td style="padding: 6px; border: 1px solid #C09B5A;">Hole</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 6px; border: 1px solid #C09B5A;">Jump</td>
-                                <td style="padding: 6px; border: 1px solid #C09B5A;">$\\lim_{x\\to c^{-}}f(x)\\neq\\lim_{x\\to c^{+}}f(x)$</td>
-                                <td style="padding: 6px; border: 1px solid #C09B5A;">Step break</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 6px; border: 1px solid #C09B5A;">Infinite</td>
-                                <td style="padding: 6px; border: 1px solid #C09B5A;">$\\lim_{x\\to c^{\\pm}}f(x)=\\pm\\infty$</td>
-                                <td style="padding: 6px; border: 1px solid #C09B5A;">Vert. asymptote</td>
-                            </tr>
-                        </table>
-                        Continuous on $(a,b)$: continuous at every point.<br>
-                        Continuous on $[a,b]$: continuous on $(a,b)$ and $\\lim_{x\\to a^{+}}f(x)=f(a)$, $\\lim_{x\\to b^{-}}f(x)=f(b)$
-                    </td>
-                </tr>
-                <tr style="border-bottom: 1px solid #C09B5A;">
-                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">1.14–1.15<br>Limits at Infinity & Asymptotes</td>
-                    <td style="padding: 10px; vertical-align: top;">
-                        <b>Vertical:</b> $x=c$ is asymptote if $\\lim_{x\\to c^{+}}f(x)=\\pm\\infty$ or $\\lim_{x\\to c^{-}}f(x)=\\pm\\infty$<br>
-                        <b>Horizontal:</b> $y=L$ is asymptote if $\\lim_{x\\to\\infty}f(x)=L$ or $\\lim_{x\\to-\\infty}f(x)=L$<br><br>
-                        Degree of numerator $n$, denominator $m$:<br>
-                        • $n<m$ (Bottom Heavy): $\\lim_{x\\to\\pm\\infty}f(x)=0$<br>
-                        • $n=m$ (Balanced): $\\lim_{x\\to\\pm\\infty}f(x)=\\frac{a}{b}$<br>
-                        • $n>m$ (Top Heavy): $\\lim_{x\\to\\pm\\infty}f(x)=\\pm\\infty$
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">1.16<br>Intermediate Value Thm (IVT)</td>
-                    <td style="padding: 10px; vertical-align: top;">
-                        <b>Conditions:</b> <b>1.</b> $f(x)$ continuous on closed $[a,b]$ &nbsp; <b>2.</b> $u$ strictly between $f(a)$ and $f(b)$, $f(a)\\neq f(b)$<br>
-                        <b>Conclusion:</b> there exists at least one $c\\in(a,b)$ such that $f(c)=u$
-                    </td>
-                </tr>
-            </table>
-        </div>
+        1: r"""
+<div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-bottom: none; border-top-left-radius: 12px; border-top-right-radius: 12px; padding: 15px; text-align: center; color: #C09B5A;">
+    <h3 style="margin: 0; color: #C09B5A;">Unit 1: Limits & Continuity — Quick Reference</h3>
+</div>
 
-        <div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-radius: 12px; padding: 22px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: sans-serif;">
-            <h3 style="color: #C09B5A; text-align: center; margin-top: 0; font-family: sans-serif;">Unit 1: Limits & Continuity — Core Definitions</h3>
-            <hr style="border-color: #C09B5A; margin-bottom: 15px;">
-            <table style="width: 100%; color: white; border-collapse: collapse; font-size: 14px;">
-                <tr style="border-bottom: 1px solid #C09B5A;">
-                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; width: 28%; vertical-align: top;">1.1–1.4<br>Core Limit Concepts</td>
-                    <td style="padding: 10px; vertical-align: top;">
-                        <b>Def. Limit of a Function:</b> let $f(x)$ be defined on an open interval around $c$ (except possibly at $c$). We say $\\lim_{x\\to c}f(x)=L$ if we can make $f(x)$ arbitrarily close to $L$ by taking $x$ sufficiently close to $c$, from both sides, but not equal to $c$.<br><br>
-                        <b>Def. One-Sided Limits:</b><br>
-                        Left-hand: $x\\to c$ strictly from values $<c$: $\\lim_{x\\to c^{-}}f(x)$<br>
-                        Right-hand: $x\\to c$ strictly from values $>c$: $\\lim_{x\\to c^{+}}f(x)$<br><br>
-                        <b>Existence Condition:</b> $\\lim_{x\\to c}f(x)$ exists iff both one-sided limits exist and are equal to the same finite value $L$: $\\lim_{x\\to c^{-}}f(x)=\\lim_{x\\to c^{+}}f(x)=L$
-                    </td>
-                </tr>
-                <tr style="border-bottom: 1px solid #C09B5A;">
-                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">Discontinuity Types</td>
-                    <td style="padding: 10px; vertical-align: top;">
-                        <b>Jump:</b> left- and right-hand limits both exist as finite numbers, but are unequal: $\\lim_{x\\to c^{-}}f(x)\\neq\\lim_{x\\to c^{+}}f(x)$<br><br>
-                        <b>Infinite:</b> one or both one-sided limits approach $\\pm\\infty$ as $x\\to c$
-                    </td>
-                </tr>
-                <tr style="border-bottom: 1px solid #C09B5A;">
-                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">1.14–1.15<br>Asymptotic Behavior</td>
-                    <td style="padding: 10px; vertical-align: top;">
-                        <b>Vertical Asymptote:</b> the line $x=c$ is a vertical asymptote of $f(x)$ if the output grows without bound as $x\\to c$: $\\lim_{x\\to c^{+}}f(x)=\\pm\\infty$ or $\\lim_{x\\to c^{-}}f(x)=\\pm\\infty$<br><br>
-                        <b>Horizontal Asymptote:</b> the line $y=L$ is a horizontal asymptote if $f$ stabilizes toward $L$ as $x\\to\\pm\\infty$: $\\lim_{x\\to\\infty}f(x)=L$ or $\\lim_{x\\to-\\infty}f(x)=L$
-                    </td>
-                </tr>
-                <tr style="border-bottom: 1px solid #C09B5A;">
-                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">1.5–1.7<br>Indeterminate Forms</td>
-                    <td style="padding: 10px; vertical-align: top;">
-                        <b>Def. Indeterminate Form:</b> an algebraic expression obtained by evaluating a limit that does not provide enough information to determine the limit's actual value. The most common structural form is $\\left[\\frac{0}{0}\\right]$. It signals the limit <i>may or may not</i> exist and requires further manipulation (factoring, conjugate rationalization, simplifying complex fractions).
-                    </td>
-                </tr>
-                <tr style="border-bottom: 1px solid #C09B5A;">
-                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">1.16<br>Existence Theorems</td>
-                    <td style="padding: 10px; vertical-align: top;">
-                        <b>Thm. Intermediate Value Theorem (IVT):</b> if $f$ is continuous on the closed interval $[a,b]$, and $y_0$ is any value strictly between $f(a)$ and $f(b)$, then there must exist at least one value $c\\in(a,b)$ such that $f(c)=y_0$
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">1.10–1.13<br>Continuity & Discontinuity</td>
-                    <td style="padding: 10px; vertical-align: top;">
-                        <b>Def. Continuity at a Point:</b> $f$ is continuous at $x=c$ if it satisfies all three: <b>1.</b> $f(c)$ is defined &nbsp; <b>2.</b> $\\lim_{x\\to c}f(x)$ exists &nbsp; <b>3.</b> $\\lim_{x\\to c}f(x)=f(c)$<br><br>
-                        <b>Def. Removable Discontinuity:</b> a discontinuity at $x=c$ where $\\lim_{x\\to c}f(x)$ exists, but either $f(c)$ is undefined or $\\lim_{x\\to c}f(x)\\neq f(c)$. Graphically, a single hole in the graph.
-                    </td>
-                </tr>
-            </table>
-        </div>
-        """,
-        2: "### Unit 2: Differentiation (Basics)\n- **Power Rule:** $\\frac{d}{dx}[x^n] = n x^{n-1}$\n- **Product Rule:** $\\frac{d}{dx}[uv] = u'v + uv'$\n- **Quotient Rule:** $\\frac{d}{dx}\\left[\\frac{u}{v}\\right] = \\frac{u'v - uv'}{v^2}$",
-        3: "### Unit 3: Differentiation (Composite/Implicit)\n- **Chain Rule:** $\\frac{d}{dx}[f(g(x))] = f'(g(x)) \\cdot g'(x)$\n- **Implicit Differentiation:** Differentiate implicitly with respect to $x$ and solve for $\\frac{dy}{dx}$.",
-        4: "### Unit 4: Contextual Applications of Differentiation\n- **Related Rates:** Rate of change with respect to time $t$.\n- **Linear Approximation:** $L(x) = f(a) + f'(a)(x-a)$",
-        5: "### Unit 5: Analytical Applications of Differentiation\n- **Mean Value Theorem:** $f'(c) = \\frac{f(b)-f(a)}{b-a}$\n- **First & Second Derivative Tests:** For extrema and concavity.",
-        6: "### Unit 6: Integration & Accumulation\n- **Power Rule for Integration:** $\\int x^n dx = \\frac{x^{n+1}}{n+1} + C$\n- **Fundamental Theorem of Calculus:** $\\int_a^b f(x)dx = F(b) - F(a)$",
-        7: "### Unit 7: Differential Equations\n- **Separation of Variables:** Separate $x$ and $y$ variables on opposite sides.\n- **Exponential Growth/Decay:** $\\frac{dy}{dt} = ky \\implies y = Ce^{kt}$",
-        8: "### Unit 8: Applications of Integration\n- **Area Between Curves:** $\\int_a^b [f(x) - g(x)] dx$\n- **Volume (Disk/Washer):** $V = \\pi \\int_a^b [R(x)]^2 dx$",
-        9: "### Unit 9: Parametric, Polar & Vectors\n- **Parametric Derivative:** $\\frac{dy}{dx} = \\frac{dy/dt}{dx/dt}$\n- **Polar Area:** $A = \\frac{1}{2} \\int_a^b [r(\\theta)]^2 d\\theta$",
-        10: "### Unit 10: Infinite Sequences & Series\n- **Geometric Series:** $\\sum ar^n = \\frac{a}{1-r}$ (|r| < 1)\n- **Nth Term Test:** If $\\lim a_n \\neq 0$, the series diverges."
+| | |
+|---|---|
+| **1.1–1.4**<br>Intro to Limits | **AROC (secant slope):** $\text{AROC}=\frac{f(b)-f(a)}{b-a}$<br><br>**IROC (tangent slope):** $\text{IROC}=\lim_{h\to0}\frac{f(x+h)-f(x)}{h}$<br><br>$\lim_{x\to c}f(x)=L$ means $f(x)\to L$ as $x\to c$ from both sides<br><br>Left-hand: $\lim_{x\to c^{-}}f(x)$ &nbsp;&nbsp;\|&nbsp;&nbsp; Right-hand: $\lim_{x\to c^{+}}f(x)$<br><br>**Existence:** $\lim_{x\to c}f(x)=L \iff \lim_{x\to c^{-}}f(x)=\lim_{x\to c^{+}}f(x)=L$ |
+| **1.5–1.7**<br>Algebraic Properties | Assume $\lim_{x\to c}f(x)=L,\ \lim_{x\to c}g(x)=M$:<br>• **Sum/Diff:** $\lim[f(x)\pm g(x)]=L\pm M$<br>• **Product:** $\lim[f(x)g(x)]=LM$<br>• **Quotient:** $\lim\frac{f(x)}{g(x)}=\frac{L}{M}\ (M\neq0)$<br>• **Constant:** $\lim[kf(x)]=kL$<br>• **Power/Root:** $\lim[f(x)]^n=L^n$, &nbsp; $\lim\sqrt[n]{f(x)}=\sqrt[n]{L}$<br><br>**1. Factor:** cancel common factors (e.g., $\frac{x^2-4}{x-2}=\frac{(x-2)(x+2)}{x-2}$)<br>**2. Rationalize:** multiply by conjugate $(\sqrt{a}-b)(\sqrt{a}+b)=a-b^2$<br>**3. Complex Fractions:** multiply by LCD to simplify |
+| **1.8**<br>Squeeze Theorem | If $g(x)\le f(x)\le h(x)$ for all $x$ near $c$ (except possibly at $c$), and $\lim_{x\to c}g(x)=\lim_{x\to c}h(x)=L$, then $\lim_{x\to c}f(x)=L$ |
+| **1.10–1.13**<br>Continuity & Discontinuities | $f(x)$ is continuous at $x=c$ iff:<br>**1.** $f(c)$ is defined &nbsp; **2.** $\lim_{x\to c}f(x)$ exists &nbsp; **3.** $\lim_{x\to c}f(x)=f(c)$<br><br>**Types:**<br>• **Removable:** $\lim_{x\to c}f(x)$ exists, $\neq f(c)$ (Hole)<br>• **Jump:** $\lim_{x\to c^{-}}f(x)\neq\lim_{x\to c^{+}}f(x)$ (Step break)<br>• **Infinite:** $\lim_{x\to c^{\pm}}f(x)=\pm\infty$ (Vert. asymptote)<br><br>Continuous on $(a,b)$: continuous at every point.<br>Continuous on $[a,b]$: continuous on $(a,b)$ and $\lim_{x\to a^{+}}f(x)=f(a)$, $\lim_{x\to b^{-}}f(x)=f(b)$ |
+| **1.14–1.15**<br>Limits at Infinity & Asymptotes | **Vertical:** $x=c$ is asymptote if $\lim_{x\to c^{+}}f(x)=\pm\infty$ or $\lim_{x\to c^{-}}f(x)=\pm\infty$<br>**Horizontal:** $y=L$ is asymptote if $\lim_{x\to\infty}f(x)=L$ or $\lim_{x\to-\infty}f(x)=L$<br><br>Degree of numerator $n$, denominator $m$:<br>• $n<m$ (Bottom Heavy): $\lim_{x\to\pm\infty}f(x)=0$<br>• $n=m$ (Balanced): $\lim_{x\to\pm\infty}f(x)=\frac{a}{b}$<br>• $n>m$ (Top Heavy): $\lim_{x\to\pm\infty}f(x)=\pm\infty$ |
+| **1.16**<br>Intermediate Value Thm (IVT) | **Conditions:** **1.** $f(x)$ continuous on closed $[a,b]$ &nbsp; **2.** $u$ strictly between $f(a)$ and $f(b)$, $f(a)\neq f(b)$<br>**Conclusion:** there exists at least one $c\in(a,b)$ such that $f(c)=u$ |
+
+<br><br>
+
+<div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-bottom: none; border-top-left-radius: 12px; border-top-right-radius: 12px; padding: 15px; text-align: center; color: #C09B5A;">
+    <h3 style="margin: 0; color: #C09B5A;">Unit 1: Limits & Continuity — Core Definitions</h3>
+</div>
+
+| | |
+|---|---|
+| **1.1–1.4**<br>Core Limit Concepts | **Def. Limit of a Function:** let $f(x)$ be defined on an open interval around $c$ (except possibly at $c$). We say $\lim_{x\to c}f(x)=L$ if we can make $f(x)$ arbitrarily close to $L$ by taking $x$ sufficiently close to $c$, from both sides, but not equal to $c$.<br><br>**Def. One-Sided Limits:**<br>Left-hand: $x\to c$ strictly from values $<c$: $\lim_{x\to c^{-}}f(x)$<br>Right-hand: $x\to c$ strictly from values $>c$: $\lim_{x\to c^{+}}f(x)$<br><br>**Existence Condition:** $\lim_{x\to c}f(x)$ exists iff both one-sided limits exist and are equal to the same finite value $L$: $\lim_{x\to c^{-}}f(x)=\lim_{x\to c^{+}}f(x)=L$ |
+| **Discontinuity Types** | **Jump:** left- and right-hand limits both exist as finite numbers, but are unequal: $\lim_{x\to c^{-}}f(x)\neq\lim_{x\to c^{+}}f(x)$<br><br>**Infinite:** one or both one-sided limits approach $\pm\infty$ as $x\to c$ |
+| **1.14–1.15**<br>Asymptotic Behavior | **Vertical Asymptote:** the line $x=c$ is a vertical asymptote of $f(x)$ if the output grows without bound as $x\to c$: $\lim_{x\to c^{+}}f(x)=\pm\infty$ or $\lim_{x\to c^{-}}f(x)=\pm\infty$<br><br>**Horizontal Asymptote:** the line $y=L$ is a horizontal asymptote if $f$ stabilizes toward $L$ as $x\to\pm\infty$: $\lim_{x\to\infty}f(x)=L$ or $\lim_{x\to-\infty}f(x)=L$ |
+| **1.5–1.7**<br>Indeterminate Forms | **Def. Indeterminate Form:** an algebraic expression obtained by evaluating a limit that does not provide enough information to determine the limit's actual value. The most common structural form is $\left[\frac{0}{0}\right]$. It signals the limit *may or may not* exist and requires further manipulation (factoring, conjugate rationalization, simplifying complex fractions). |
+| **1.16**<br>Existence Theorems | **Thm. Intermediate Value Theorem (IVT):** if $f$ is continuous on the closed interval $[a,b]$, and $y_0$ is any value strictly between $f(a)$ and $f(b)$, then there must exist at least one value $c\in(a,b)$ such that $f(c)=y_0$ |
+| **1.10–1.13**<br>Continuity & Discontinuity | **Def. Continuity at a Point:** $f$ is continuous at $x=c$ if it satisfies all three: **1.** $f(c)$ is defined &nbsp; **2.** $\lim_{x\to c}f(x)$ exists &nbsp; **3.** $\lim_{x\to c}f(x)=f(c)$<br><br>**Def. Removable Discontinuity:** a discontinuity at $x=c$ where $\lim_{x\to c}f(x)$ exists, but either $f(c)$ is undefined or $\lim_{x\to c}f(x)\neq f(c)$. Graphically, a single hole in the graph. |
+""",
+        2: "### Unit 2: Differentiation (Basics)\n- **Power Rule:** $\\frac{d}{dx}[x^n] = n x^{n-1}$",
+        3: "### Unit 3: Differentiation (Composite/Implicit)\n- Chain Rule: $\\frac{d}{dx}[f(g(x))] = f'(g(x)) \\cdot g'(x)$\n- Implicit Differentiation: Differentiate implicitly with respect to $x$ and solve for $\\frac{dy}{dx}$.",
+        4: "### Unit 4: Contextual Applications of Differentiation\n- Related Rates: Rate of change with respect to time $t$.\n- Linear Approximation: $L(x) = f(a) + f'(a)(x-a)$",
+        5: "### Unit 5: Analytical Applications of Differentiation\n- Mean Value Theorem: $f'(c) = \\frac{f(b)-f(a)}{b-a}$\n- First & Second Derivative Tests: For extrema and concavity.",
+        6: "### Unit 6: Integration & Accumulation\n- Power Rule for Integration: $\\int x^n dx = \\frac{x^{n+1}}{n+1} + C$\n- Fundamental Theorem of Calculus: $\\int_a^b f(x)dx = F(b) - F(a)$",
+        7: "### Unit 7: Differential Equations\n- Separation of Variables: Separate $x$ and $y$ variables on opposite sides.\n- Exponential Growth/Decay: $\\frac{dy}{dt} = ky \\implies y = Ce^{kt}$",
+        8: "### Unit 8: Applications of Integration\n- Area Between Curves: $\\int_a^b [f(x) - g(x)] dx$\n- Volume (Disk/Washer): $V = \\pi \\int_a^b [R(x)]^2 dx$",
+        9: "### Unit 9: Parametric, Polar & Vectors\n- Parametric Derivative: $\\frac{dy}{dx} = \\frac{dy/dt}{dx/dt}$\n- Polar Area: $A = \\frac{1}{2} \\int_a^b [r(\\theta)]^2 d\\theta$",
+        10: "### Unit 10: Infinite Sequences & Series\n- Geometric Series: $\\sum ar^n = \\frac{a}{1-r}$ (|r| < 1)\n- Nth Term Test: If $\\lim a_n \\neq 0$, the series diverges."
     }
     
     st.markdown(cheat_sheets.get(unit_num, "*Add your custom formulas for this unit here!*"), unsafe_allow_html=True)

@@ -458,7 +458,7 @@ def unit_detail_screen():
         10: "### Unit 10: Infinite Sequences & Series\n- **Geometric Series:** $\\sum ar^n = \\frac{a}{1-r}$ (|r| < 1)\n- **Nth Term Test:** If $\\lim a_n \\neq 0$, the series diverges."
     }
     
-    st.markdown(cheat_sheets.get(unit_num, "*Add your custom formulas for this unit here!*"))
+    st.markdown(cheat_sheets.get(unit_num, "*Add your custom formulas for this unit here!*"), unsafe_allow_html=True)
 
 def quiz_screen():
     if st.session_state.current_q_index >= len(st.session_state.quiz_questions):

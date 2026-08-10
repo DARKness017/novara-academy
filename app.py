@@ -311,45 +311,138 @@ def unit_detail_screen():
     
     cheat_sheets = {
         1: """
-        <div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-radius: 12px; padding: 22px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <h3 style="color: #C09B5A; text-align: center; margin-top: 0; font-family: sans-serif;">Unit 1: Limits & Continuity — Master Summary</h3>
+        <div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-radius: 12px; padding: 22px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: sans-serif; margin-bottom: 20px;">
+            <h3 style="color: #C09B5A; text-align: center; margin-top: 0; font-family: sans-serif;">Unit 1: Limits & Continuity — Quick Reference</h3>
             <hr style="border-color: #C09B5A; margin-bottom: 15px;">
-            <table style="width: 100%; color: white; border-collapse: collapse; font-family: sans-serif; font-size: 14px;">
+            <table style="width: 100%; color: white; border-collapse: collapse; font-size: 14px;">
                 <tr style="border-bottom: 1px solid #C09B5A;">
-                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; width: 32%; vertical-align: top;">Limit Definition</td>
-                    <td style="padding: 10px; vertical-align: top;">$\lim_{x\to c}f(x)=L$: $f(x)$ approaches $L$ as $x$ approaches $c$ from both sides</td>
+                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; width: 28%; vertical-align: top;">1.1–1.4<br>Intro to Limits</td>
+                    <td style="padding: 10px; vertical-align: top;">
+                        <b>AROC (secant slope):</b> $\\text{AROC}=\\frac{f(b)-f(a)}{b-a}$<br><br>
+                        <b>IROC (tangent slope):</b> $\\text{IROC}=\\lim_{h\\to0}\\frac{f(x+h)-f(x)}{h}$<br><br>
+                        $\\lim_{x\\to c}f(x)=L$ means $f(x)\\to L$ as $x\\to c$ from both sides<br><br>
+                        Left-hand: $\\lim_{x\\to c^{-}}f(x)$ &nbsp;|&nbsp; Right-hand: $\\lim_{x\\to c^{+}}f(x)$<br><br>
+                        <b>Existence:</b> $\\lim_{x\\to c}f(x)=L \\iff \\lim_{x\\to c^{-}}f(x)=\\lim_{x\\to c^{+}}f(x)=L$
+                    </td>
                 </tr>
                 <tr style="border-bottom: 1px solid #C09B5A;">
-                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">One-Sided Limits</td>
-                    <td style="padding: 10px; vertical-align: top;">Left: $\lim_{x\to c^-}f(x)$ &nbsp;|&nbsp; Right: $\lim_{x\to c^+}f(x)$</td>
+                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">1.5–1.7<br>Algebraic Properties</td>
+                    <td style="padding: 10px; vertical-align: top;">
+                        Assume $\\lim_{x\\to c}f(x)=L,\\ \\lim_{x\\to c}g(x)=M$:<br>
+                        • <b>Sum/Diff:</b> $\\lim[f(x)\\pm g(x)]=L\\pm M$<br>
+                        • <b>Product:</b> $\\lim[f(x)g(x)]=LM$<br>
+                        • <b>Quotient:</b> $\\lim\\frac{f(x)}{g(x)}=\\frac{L}{M}\\ (M\\neq0)$<br>
+                        • <b>Constant:</b> $\\lim[kf(x)]=kL$<br>
+                        • <b>Power/Root:</b> $\\lim[f(x)]^n=L^n$, &nbsp; $\\lim\\sqrt[n]{f(x)}=\\sqrt[n]{L}$<br><br>
+                        <b>1. Factor:</b> cancel common factors (e.g., $\\frac{x^2-4}{x-2}=\\frac{(x-2)(x+2)}{x-2}$)<br>
+                        <b>2. Rationalize:</b> multiply by conjugate $(\\sqrt{a}-b)(\\sqrt{a}+b)=a-b^2$<br>
+                        <b>3. Complex Fractions:</b> multiply by LCD to simplify
+                    </td>
                 </tr>
                 <tr style="border-bottom: 1px solid #C09B5A;">
-                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">Existence Condition</td>
-                    <td style="padding: 10px; vertical-align: top;">$\lim_{x\to c}f(x)=L \;\iff\; \lim_{x\to c^-}f(x) = \lim_{x\to c^+}f(x) = L$</td>
+                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">1.8<br>Squeeze Theorem</td>
+                    <td style="padding: 10px; vertical-align: top;">
+                        If $g(x)\\le f(x)\\le h(x)$ for all $x$ near $c$ (except possibly at $c$), and $\\lim_{x\\to c}g(x)=\\lim_{x\\to c}h(x)=L$, then $\\lim_{x\\to c}f(x)=L$
+                    </td>
                 </tr>
                 <tr style="border-bottom: 1px solid #C09B5A;">
-                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">Indeterminate Forms</td>
-                    <td style="padding: 10px; vertical-align: top;">$\left[\frac{0}{0}\right]$ indicates further algebraic manipulation needed (factoring, conjugate, LCD)</td>
+                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">1.10–1.13<br>Continuity & Discontinuities</td>
+                    <td style="padding: 10px; vertical-align: top;">
+                        $f(x)$ is continuous at $x=c$ iff:<br>
+                        <b>1.</b> $f(c)$ is defined &nbsp; <b>2.</b> $\\lim_{x\\to c}f(x)$ exists &nbsp; <b>3.</b> $\\lim_{x\\to c}f(x)=f(c)$<br><br>
+                        <table style="width: 100%; border: 1px solid #C09B5A; margin: 8px 0; font-size: 13px; border-collapse: collapse;">
+                            <tr style="background-color: #122a5c; color: #C09B5A;">
+                                <th style="padding: 6px; text-align: left; border: 1px solid #C09B5A;">Type</th>
+                                <th style="padding: 6px; text-align: left; border: 1px solid #C09B5A;">Condition</th>
+                                <th style="padding: 6px; text-align: left; border: 1px solid #C09B5A;">Graphic</th>
+                            </tr>
+                            <tr>
+                                <td style="padding: 6px; border: 1px solid #C09B5A;">Removable</td>
+                                <td style="padding: 6px; border: 1px solid #C09B5A;">$\\lim_{x\\to c}f(x)$ exists, $\\neq f(c)$</td>
+                                <td style="padding: 6px; border: 1px solid #C09B5A;">Hole</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 6px; border: 1px solid #C09B5A;">Jump</td>
+                                <td style="padding: 6px; border: 1px solid #C09B5A;">$\\lim_{x\\to c^{-}}f(x)\\neq\\lim_{x\\to c^{+}}f(x)$</td>
+                                <td style="padding: 6px; border: 1px solid #C09B5A;">Step break</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 6px; border: 1px solid #C09B5A;">Infinite</td>
+                                <td style="padding: 6px; border: 1px solid #C09B5A;">$\\lim_{x\\to c^{\\pm}}f(x)=\\pm\\infty$</td>
+                                <td style="padding: 6px; border: 1px solid #C09B5A;">Vert. asymptote</td>
+                            </tr>
+                        </table>
+                        Continuous on $(a,b)$: continuous at every point.<br>
+                        Continuous on $[a,b]$: continuous on $(a,b)$ and $\\lim_{x\\to a^{+}}f(x)=f(a)$, $\\lim_{x\\to b^{-}}f(x)=f(b)$
+                    </td>
                 </tr>
                 <tr style="border-bottom: 1px solid #C09B5A;">
-                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">Squeeze Theorem</td>
-                    <td style="padding: 10px; vertical-align: top;">$g(x) \le f(x) \le h(x)$ and $\lim g = \lim h = L \;\implies\; \lim f = L$</td>
+                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">1.14–1.15<br>Limits at Infinity & Asymptotes</td>
+                    <td style="padding: 10px; vertical-align: top;">
+                        <b>Vertical:</b> $x=c$ is asymptote if $\\lim_{x\\to c^{+}}f(x)=\\pm\\infty$ or $\\lim_{x\\to c^{-}}f(x)=\\pm\\infty$<br>
+                        <b>Horizontal:</b> $y=L$ is asymptote if $\\lim_{x\\to\\infty}f(x)=L$ or $\\lim_{x\\to-\\infty}f(x)=L$<br><br>
+                        Degree of numerator $n$, denominator $m$:<br>
+                        • $n<m$ (Bottom Heavy): $\\lim_{x\\to\\pm\\infty}f(x)=0$<br>
+                        • $n=m$ (Balanced): $\\lim_{x\\to\\pm\\infty}f(x)=\\frac{a}{b}$<br>
+                        • $n>m$ (Top Heavy): $\\lim_{x\\to\\pm\\infty}f(x)=\\pm\\infty$
+                    </td>
                 </tr>
+                <tr>
+                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">1.16<br>Intermediate Value Thm (IVT)</td>
+                    <td style="padding: 10px; vertical-align: top;">
+                        <b>Conditions:</b> <b>1.</b> $f(x)$ continuous on closed $[a,b]$ &nbsp; <b>2.</b> $u$ strictly between $f(a)$ and $f(b)$, $f(a)\\neq f(b)$<br>
+                        <b>Conclusion:</b> there exists at least one $c\\in(a,b)$ such that $f(c)=u$
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-radius: 12px; padding: 22px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: sans-serif;">
+            <h3 style="color: #C09B5A; text-align: center; margin-top: 0; font-family: sans-serif;">Unit 1: Limits & Continuity — Core Definitions</h3>
+            <hr style="border-color: #C09B5A; margin-bottom: 15px;">
+            <table style="width: 100%; color: white; border-collapse: collapse; font-size: 14px;">
                 <tr style="border-bottom: 1px solid #C09B5A;">
-                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">Continuity at a Point</td>
-                    <td style="padding: 10px; vertical-align: top;">$f(c)$ defined, $\lim_{x\to c}f(x)$ exists, and $\lim_{x\to c}f(x) = f(c)$</td>
+                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; width: 28%; vertical-align: top;">1.1–1.4<br>Core Limit Concepts</td>
+                    <td style="padding: 10px; vertical-align: top;">
+                        <b>Def. Limit of a Function:</b> let $f(x)$ be defined on an open interval around $c$ (except possibly at $c$). We say $\\lim_{x\\to c}f(x)=L$ if we can make $f(x)$ arbitrarily close to $L$ by taking $x$ sufficiently close to $c$, from both sides, but not equal to $c$.<br><br>
+                        <b>Def. One-Sided Limits:</b><br>
+                        Left-hand: $x\\to c$ strictly from values $<c$: $\\lim_{x\\to c^{-}}f(x)$<br>
+                        Right-hand: $x\\to c$ strictly from values $>c$: $\\lim_{x\\to c^{+}}f(x)$<br><br>
+                        <b>Existence Condition:</b> $\\lim_{x\\to c}f(x)$ exists iff both one-sided limits exist and are equal to the same finite value $L$: $\\lim_{x\\to c^{-}}f(x)=\\lim_{x\\to c^{+}}f(x)=L$
+                    </td>
                 </tr>
                 <tr style="border-bottom: 1px solid #C09B5A;">
                     <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">Discontinuity Types</td>
-                    <td style="padding: 10px; vertical-align: top;"><b>Removable:</b> limit exists $\neq f(c)$ (hole)<br><b>Jump:</b> one-sided limits unequal (break)<br><b>Infinite:</b> approaches $\pm\infty$ (vertical asymptote)</td>
+                    <td style="padding: 10px; vertical-align: top;">
+                        <b>Jump:</b> left- and right-hand limits both exist as finite numbers, but are unequal: $\\lim_{x\\to c^{-}}f(x)\\neq\\lim_{x\\to c^{+}}f(x)$<br><br>
+                        <b>Infinite:</b> one or both one-sided limits approach $\\pm\\infty$ as $x\\to c$
+                    </td>
                 </tr>
                 <tr style="border-bottom: 1px solid #C09B5A;">
-                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">Asymptotes</td>
-                    <td style="padding: 10px; vertical-align: top;"><b>Vertical:</b> $\lim_{x\to c^\pm}f(x)=\pm\infty \;\implies\; x=c$<br><b>Horizontal:</b> $\lim_{x\to\pm\infty}f(x)=L \;\implies\; y=L$</td>
+                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">1.14–1.15<br>Asymptotic Behavior</td>
+                    <td style="padding: 10px; vertical-align: top;">
+                        <b>Vertical Asymptote:</b> the line $x=c$ is a vertical asymptote of $f(x)$ if the output grows without bound as $x\\to c$: $\\lim_{x\\to c^{+}}f(x)=\\pm\\infty$ or $\\lim_{x\\to c^{-}}f(x)=\\pm\\infty$<br><br>
+                        <b>Horizontal Asymptote:</b> the line $y=L$ is a horizontal asymptote if $f$ stabilizes toward $L$ as $x\\to\\pm\\infty$: $\\lim_{x\\to\\infty}f(x)=L$ or $\\lim_{x\\to-\\infty}f(x)=L$
+                    </td>
+                </tr>
+                <tr style="border-bottom: 1px solid #C09B5A;">
+                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">1.5–1.7<br>Indeterminate Forms</td>
+                    <td style="padding: 10px; vertical-align: top;">
+                        <b>Def. Indeterminate Form:</b> an algebraic expression obtained by evaluating a limit that does not provide enough information to determine the limit's actual value. The most common structural form is $\\left[\\frac{0}{0}\\right]$. It signals the limit <i>may or may not</i> exist and requires further manipulation (factoring, conjugate rationalization, simplifying complex fractions).
+                    </td>
+                </tr>
+                <tr style="border-bottom: 1px solid #C09B5A;">
+                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">1.16<br>Existence Theorems</td>
+                    <td style="padding: 10px; vertical-align: top;">
+                        <b>Thm. Intermediate Value Theorem (IVT):</b> if $f$ is continuous on the closed interval $[a,b]$, and $y_0$ is any value strictly between $f(a)$ and $f(b)$, then there must exist at least one value $c\\in(a,b)$ such that $f(c)=y_0$
+                    </td>
                 </tr>
                 <tr>
-                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">IVT (Intermediate Value)</td>
-                    <td style="padding: 10px; vertical-align: top;">Continuous on $[a,b]$, $u$ strictly between $f(a)$ and $f(b)$ $\;\implies\; f(c)=u$</td>
+                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">1.10–1.13<br>Continuity & Discontinuity</td>
+                    <td style="padding: 10px; vertical-align: top;">
+                        <b>Def. Continuity at a Point:</b> $f$ is continuous at $x=c$ if it satisfies all three: <b>1.</b> $f(c)$ is defined &nbsp; <b>2.</b> $\\lim_{x\\to c}f(x)$ exists &nbsp; <b>3.</b> $\\lim_{x\\to c}f(x)=f(c)$<br><br>
+                        <b>Def. Removable Discontinuity:</b> a discontinuity at $x=c$ where $\\lim_{x\\to c}f(x)$ exists, but either $f(c)$ is undefined or $\\lim_{x\\to c}f(x)\\neq f(c)$. Graphically, a single hole in the graph.
+                    </td>
                 </tr>
             </table>
         </div>

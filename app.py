@@ -28,6 +28,7 @@ st.markdown("""
     }
 
     /* --- 2. NOVARA ACADEMY BUTTON STYLING --- */
+    /* Only the 10 Unit buttons = Deep Navy */
     .stButton > button {
         background-color: #0B1B3D !important;
         color: white !important;
@@ -41,6 +42,7 @@ st.markdown("""
         border: 1px solid #0B1B3D !important;
     }
     
+    /* Primary buttons (Log Out, Start Quiz, Analytics, Difficulty selectors) = Champagne Gold */
     .stButton > button[kind="primary"] {
         background-color: #C09B5A !important;
         color: #0B1B3D !important;
@@ -84,11 +86,10 @@ if 'q_start_time' not in st.session_state:
     st.session_state.q_start_time = 0
 if 'quiz_score' not in st.session_state:
     st.session_state.quiz_score = 0
-# NEW: Track Selected Difficulty
 if 'difficulty' not in st.session_state:
     st.session_state.difficulty = "All" 
 
-# --- 4. Core Application Logic ---
+# --- 4. Core Application Logic (With Adaptive Engine & Difficulty Filtering) ---
 def start_quiz(unit=None):
     if unit:
         response = supabase.table("questions").select("*").eq("unit_number", unit).execute()
@@ -127,7 +128,7 @@ def start_quiz(unit=None):
             if questions:
                 random.shuffle(questions)
 
-    # NEW: Filter by selected difficulty if they didn't choose "All"
+    # Filter by selected difficulty if they didn't choose "All"
     if st.session_state.difficulty != "All":
         questions = [q for q in questions if q.get('difficulty') == st.session_state.difficulty]
         
@@ -174,7 +175,7 @@ def login_screen():
     st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>Secure Adaptive Quiz Engine</h3>", unsafe_allow_html=True)
     st.write("---")
 
-    tab1, tab2, tab3 = st.tabs(["Log In", "Create Account", "Forgot Password"])
+    tab1, tab2 = st.tabs(["Log In", "Create Account"])
     
     with tab1:
         login_email = st.text_input("Email Address", key="login_email")
@@ -218,20 +219,6 @@ def login_screen():
                     st.error(f"Registration failed: An account with this email may already exist.")
             else:
                 st.warning("Please fill in all fields.")
-                
-    with tab3:
-        st.markdown("### 🔒 Reset Your Password")
-        st.write("Enter your email address and we will send you a secure reset link.")
-        reset_email = st.text_input("Account Email", key="reset_email")
-        if st.button("Send Reset Link", type="primary"):
-            if reset_email:
-                try:
-                    supabase.auth.reset_password_for_email(reset_email)
-                    st.success("✅ Secure reset link sent! Please check your email inbox.")
-                except Exception as e:
-                    st.error("Could not send reset link. Ensure the email is correct.")
-            else:
-                st.warning("Please enter your email address.")
 
 def dashboard_screen():
     st.markdown(f"<h1 style='text-align: center; color: #0B1B3D;'>Welcome, {st.session_state.username}!</h1>", unsafe_allow_html=True)
@@ -252,46 +239,51 @@ def dashboard_screen():
             
     st.write("---")
     
-    # --- NEW: DIFFICULTY SELECTOR ---
-    st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>1. Select Difficulty Level</h3>", unsafe_allow_html=True)
+    # --- DIFFICULTY SELECTOR ---
+    st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>Select Question Difficulty</h3>", unsafe_allow_html=True)
     diff_col1, diff_col2, diff_col3, diff_col4 = st.columns(4)
     with diff_col1:
-        if st.button("🌐 All", use_container_width=True): st.session_state.difficulty = "All"
+        if st.button("🌐 All", use_container_width=True, type="primary"): st.session_state.difficulty = "All"
     with diff_col2:
-        if st.button("🟢 Easy", use_container_width=True): st.session_state.difficulty = "Easy"
+        if st.button("🟢 Easy", use_container_width=True, type="primary"): st.session_state.difficulty = "Easy"
     with diff_col3:
-        if st.button("🟡 Medium", use_container_width=True): st.session_state.difficulty = "Medium"
+        if st.button("🟡 Medium", use_container_width=True, type="primary"): st.session_state.difficulty = "Medium"
     with diff_col4:
-        if st.button("🔴 Hard", use_container_width=True): st.session_state.difficulty = "Hard"
+        if st.button("🔴 Hard", use_container_width=True, type="primary"): st.session_state.difficulty = "Hard"
         
-    st.info(f"**Current Setting:** Your quizzes will currently pull **{st.session_state.difficulty}** questions.")
-
-    # --- NEW: CHEAT SHEET PLACEHOLDER ---
-    st.write("---")
-    st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>2. AP Calculus Formula Cheat Sheets</h3>", unsafe_allow_html=True)
-    with st.expander("📝 View Unit Formulas & Cheat Sheets (Click to Expand)"):
-        st.write("*We will paste your custom formulas here!*")
+    st.info(f"**Current Setting:** Quizzes are pulling **{st.session_state.difficulty}** questions.")
 
     st.write("---")
-    # --- UNIT SELECTION ---
-    st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>3. Start Unit Quiz</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>AP Calculus Units & Formula Cheat Sheets</h3>", unsafe_allow_html=True)
     
     units = [
-        "Unit 1: Limits & Continuity", "Unit 2: Differentiation (Basics)",
-        "Unit 3: Diff (Composite/Implicit)", "Unit 4: Contextual Apps of Diff",
-        "Unit 5: Analytical Apps of Diff", "Unit 6: Integration & Accumulation",
-        "Unit 7: Differential Equations", "Unit 8: Applications of Integration",
-        "Unit 9: Parametric/Polar/Vectors", "Unit 10: Infinite Sequences & Series"
+        "Unit 1: Limits & Continuity", 
+        "Unit 2: Differentiation (Basics)",
+        "Unit 3: Diff (Composite/Implicit)", 
+        "Unit 4: Contextual Apps of Diff",
+        "Unit 5: Analytical Apps of Diff", 
+        "Unit 6: Integration & Accumulation",
+        "Unit 7: Differential Equations", 
+        "Unit 8: Applications of Integration",
+        "Unit 9: Parametric/Polar/Vectors", 
+        "Unit 10: Infinite Sequences & Series"
     ]
     
+    # Render units in pairs with individual cheat sheet expanders right underneath each unit
     for i in range(0, 10, 2):
         c1, c2 = st.columns(2)
+        
         with c1:
             if st.button(units[i], use_container_width=True):
                 start_quiz(i + 1)
+            with st.expander(f"📝 {units[i]} Cheat Sheet"):
+                st.write(f"*Add your custom formulas for {units[i]} here!*")
+                
         with c2:
             if st.button(units[i+1], use_container_width=True):
                 start_quiz(i + 2)
+            with st.expander(f"📝 {units[i+1]} Cheat Sheet"):
+                st.write(f"*Add your custom formulas for {units[i+1]} here!*")
 
 def quiz_screen():
     if st.session_state.current_q_index >= len(st.session_state.quiz_questions):

@@ -124,6 +124,8 @@ if 'selected_unit' not in st.session_state:
     st.session_state.selected_unit = None
 if 'selected_unit_name' not in st.session_state:
     st.session_state.selected_unit_name = ""
+if 'user_answers' not in st.session_state:
+    st.session_state.user_answers = []
 
 # --- 4. Core Application Logic ---
 def start_quiz(unit=None):
@@ -191,6 +193,16 @@ def submit_answer(selected_option):
     
     if is_correct:
         st.session_state.quiz_score += 1
+
+    # --- NEW: Save the exact answer data for the Review Screen ---
+    st.session_state.user_answers.append({
+        'question': current_q['question_text'],
+        'selected': selected_option,
+        'selected_text': current_q[f"option_{selected_option.lower()}"],
+        'correct': current_q['correct_option'],
+        'correct_text': current_q[f"option_{current_q['correct_option'].lower()}"],
+        'is_correct': is_correct
+    })
 
     supabase.table("attempts").insert({
         "user_id": st.session_state.user_id,
@@ -731,14 +743,36 @@ def unit_detail_screen():
     st.markdown(cheat_sheets.get(unit_num, "*Add your custom formulas for this unit here!*"), unsafe_allow_html=True)
 
 def quiz_screen():
+    # --- POST-QUIZ REVIEW SCREEN ---
     if st.session_state.current_q_index >= len(st.session_state.quiz_questions):
-        st.success(f"Quiz Complete! Score: {st.session_state.quiz_score}/{len(st.session_state.quiz_questions)}")
-        if st.button("Return to Dashboard", type="primary"):
+        st.markdown("<h2 style='text-align: center; color: #0B1B3D;'>Quiz Complete! 🎉</h2>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style='text-align: center; color: #C09B5A;'>Your Score: {st.session_state.quiz_score} / {len(st.session_state.quiz_questions)}</h3>", unsafe_allow_html=True)
+        st.write("---")
+        
+        st.markdown("<h3 style='color: #0B1B3D;'>Question Review</h3>", unsafe_allow_html=True)
+        
+        # Loop through the saved answers and display the glowing boxes
+        for i, ans in enumerate(st.session_state.user_answers):
+            st.markdown(f"**Q{i+1}:** {ans['question']}")
+            
+            if ans['is_correct']:
+                # Native Green Success Box
+                st.success(f"**✅ Correct:** {ans['selected']}) {ans['selected_text']}")
+            else:
+                # Native Red Glowing Error Box showing what they clicked vs the right answer
+                st.error(f"**❌ Incorrect:** You chose {ans['selected']}) {ans['selected_text']} \n\n **💡 Right Answer:** {ans['correct']}) {ans['correct_text']}")
+            
+            st.write("") # Add a little spacing between questions
+            
+        st.write("---")
+        if st.button("Return to Dashboard", type="primary", use_container_width=True):
             st.session_state.quiz_started = False
+            st.session_state.user_answers = [] # Clear memory for next quiz
             st.session_state.current_screen = "dashboard"
             st.rerun()
         return
 
+    # --- ACTIVE QUIZ SCREEN ---
     q = st.session_state.quiz_questions[st.session_state.current_q_index]
     st.progress((st.session_state.current_q_index) / len(st.session_state.quiz_questions))
     st.markdown(f"**Question {st.session_state.current_q_index + 1} of {len(st.session_state.quiz_questions)}** (Unit {q['unit_number']} - {q['difficulty']})")

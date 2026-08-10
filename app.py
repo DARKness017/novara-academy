@@ -310,37 +310,49 @@ def unit_detail_screen():
     st.markdown(f"<h3 style='text-align: center; color: #0B1B3D;'>📝 {unit_name} - Formula Cheat Sheet</h3>", unsafe_allow_html=True)
     
     cheat_sheets = {
-        1: r"""
-        \begin{tcolorbox}[refcard,title={Unit 1: Limits \& Continuity — Master Summary}]
-        \begin{tabular}{>{\color{#C09B5A}\bfseries}p{0.30\linewidth}
-                        >{\color{white}}p{0.62\linewidth}}
-        Limit Definition
-          & $\lim_{x\to c}f(x)=L$: $f(x)$ approaches $L$ as $x$ approaches $c$ from both sides\\[5pt]
-        \multicolumn{2}{l}{\color{#C09B5A}\rule{\linewidth}{0.5pt}}\\[3pt]
-        One-Sided Limits
-          & Left: $\lim_{x\to c^-}f(x)$;\quad Right: $\lim_{x\to c^+}f(x)$\\[5pt]
-        Existence Condition
-          & $\lim_{x\to c}f(x)=L \;\iff\; \lim_{x\to c^-}f(x) = \lim_{x\to c^+}f(x) = L$\\[5pt]
-        \multicolumn{2}{l}{\color{#C09B5A}\rule{\linewidth}{0.5pt}}\\[3pt]
-        Indeterminate Forms
-          & $\left[\frac{0}{0}\right]$ indicates further algebraic manipulation needed (factoring, conjugate, LCD)\\[5pt]
-        Squeeze Theorem
-          & $g(x) \le f(x) \le h(x)$ and $\lim g = \lim h = L \;\Rightarrow\; \lim f = L$\\[5pt]
-        \multicolumn{2}{l}{\color{#C09B5A}\rule{\linewidth}{0.5pt}}\\[3pt]
-        Continuity at a Point
-          & $f(c)$ defined, $\lim_{x\to c}f(x)$ exists, and $\lim_{x\to c}f(x) = f(c)$\\[5pt]
-        Discontinuity Types
-          & \textbf{Removable:} limit exists $\neq f(c)$ (hole)\newline
-            \textbf{Jump:} one-sided limits unequal (break)\newline
-            \textbf{Infinite:} approaches $\pm\infty$ (vertical asymptote)\\[5pt]
-        \multicolumn{2}{l}{\color{#C09B5A}\rule{\linewidth}{0.5pt}}\\[3pt]
-        Asymptotes
-          & \textbf{Vertical:} $\lim_{x\to c^\pm}f(x)=\pm\infty \;\Rightarrow\; x=c$\newline
-            \textbf{Horizontal:} $\lim_{x\to\pm\infty}f(x)=L \;\Rightarrow\; y=L$\\[5pt]
-        IVT (Intermediate Value)
-          & Continuous on $[a,b]$, $u$ strictly between $f(a)$ and $f(b)$ $\;\Rightarrow\; f(c)=u\vphantom{\Big)}$\\[5pt]
-        \end{tabular}
-        \end{tcolorbox}
+        1: """
+        <div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-radius: 12px; padding: 22px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <h3 style="color: #C09B5A; text-align: center; margin-top: 0; font-family: sans-serif;">Unit 1: Limits & Continuity — Master Summary</h3>
+            <hr style="border-color: #C09B5A; margin-bottom: 15px;">
+            <table style="width: 100%; color: white; border-collapse: collapse; font-family: sans-serif; font-size: 14px;">
+                <tr style="border-bottom: 1px solid #C09B5A;">
+                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; width: 32%; vertical-align: top;">Limit Definition</td>
+                    <td style="padding: 10px; vertical-align: top;">$\lim_{x\to c}f(x)=L$: $f(x)$ approaches $L$ as $x$ approaches $c$ from both sides</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #C09B5A;">
+                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">One-Sided Limits</td>
+                    <td style="padding: 10px; vertical-align: top;">Left: $\lim_{x\to c^-}f(x)$ &nbsp;|&nbsp; Right: $\lim_{x\to c^+}f(x)$</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #C09B5A;">
+                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">Existence Condition</td>
+                    <td style="padding: 10px; vertical-align: top;">$\lim_{x\to c}f(x)=L \;\iff\; \lim_{x\to c^-}f(x) = \lim_{x\to c^+}f(x) = L$</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #C09B5A;">
+                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">Indeterminate Forms</td>
+                    <td style="padding: 10px; vertical-align: top;">$\left[\frac{0}{0}\right]$ indicates further algebraic manipulation needed (factoring, conjugate, LCD)</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #C09B5A;">
+                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">Squeeze Theorem</td>
+                    <td style="padding: 10px; vertical-align: top;">$g(x) \le f(x) \le h(x)$ and $\lim g = \lim h = L \;\implies\; \lim f = L$</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #C09B5A;">
+                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">Continuity at a Point</td>
+                    <td style="padding: 10px; vertical-align: top;">$f(c)$ defined, $\lim_{x\to c}f(x)$ exists, and $\lim_{x\to c}f(x) = f(c)$</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #C09B5A;">
+                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">Discontinuity Types</td>
+                    <td style="padding: 10px; vertical-align: top;"><b>Removable:</b> limit exists $\neq f(c)$ (hole)<br><b>Jump:</b> one-sided limits unequal (break)<br><b>Infinite:</b> approaches $\pm\infty$ (vertical asymptote)</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #C09B5A;">
+                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">Asymptotes</td>
+                    <td style="padding: 10px; vertical-align: top;"><b>Vertical:</b> $\lim_{x\to c^\pm}f(x)=\pm\infty \;\implies\; x=c$<br><b>Horizontal:</b> $\lim_{x\to\pm\infty}f(x)=L \;\implies\; y=L$</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; font-weight: bold; color: #C09B5A; vertical-align: top;">IVT (Intermediate Value)</td>
+                    <td style="padding: 10px; vertical-align: top;">Continuous on $[a,b]$, $u$ strictly between $f(a)$ and $f(b)$ $\;\implies\; f(c)=u$</td>
+                </tr>
+            </table>
+        </div>
         """,
         2: "### Unit 2: Differentiation (Basics)\n- **Power Rule:** $\\frac{d}{dx}[x^n] = n x^{n-1}$\n- **Product Rule:** $\\frac{d}{dx}[uv] = u'v + uv'$\n- **Quotient Rule:** $\\frac{d}{dx}\\left[\\frac{u}{v}\\right] = \\frac{u'v - uv'}{v^2}$",
         3: "### Unit 3: Differentiation (Composite/Implicit)\n- **Chain Rule:** $\\frac{d}{dx}[f(g(x))] = f'(g(x)) \\cdot g'(x)$\n- **Implicit Differentiation:** Differentiate implicitly with respect to $x$ and solve for $\\frac{dy}{dx}$.",

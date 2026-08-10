@@ -12,11 +12,19 @@ st.set_page_config(page_title="Novara Academy - Adaptive Engine", page_icon="ðŸŽ
 # --- Custom CSS Styling ---
 st.markdown("""
     <style>
-    /* --- 1. REMOVE STREAMLIT BRANDING & ADJUST PADDING --- */
+    /* --- 1. AGGRESSIVELY REMOVE ALL STREAMLIT BRANDING --- */
     #MainMenu {visibility: hidden;}
     header {visibility: hidden;}
     footer {visibility: hidden;}
     
+    /* Nuke the floating GitHub/Deploy toolbars and Streamlit badges */
+    .stDeployButton {display: none !important;}
+    [data-testid="stToolbar"] {display: none !important;}
+    [data-testid="stDecoration"] {display: none !important;}
+    [data-testid="stStatusWidget"] {display: none !important;}
+    [data-testid="viewerBadge"] {display: none !important;}
+    
+    /* Push the app content up so there isn't a massive blank space at the top */
     .block-container {
         padding-top: 2rem !important;
         padding-bottom: 0rem !important;

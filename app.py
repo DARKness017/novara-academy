@@ -310,7 +310,38 @@ def unit_detail_screen():
     st.markdown(f"<h3 style='text-align: center; color: #0B1B3D;'>📝 {unit_name} - Formula Cheat Sheet</h3>", unsafe_allow_html=True)
     
     cheat_sheets = {
-        1: "### Unit 1: Limits & Continuity\n- **Direct Substitution:** Plug in $x = c$.\n- **Squeeze Theorem:** If $g(x) \le f(x) \le h(x)$ and $\lim g(x) = \lim h(x) = L$, then $\lim f(x) = L$.\n- **Continuity Condition:** $\lim_{x\to c} f(x) = f(c)$.",
+        1: r"""
+        \begin{tcolorbox}[refcard,title={Unit 1: Limits \& Continuity — Master Summary}]
+        \begin{tabular}{>{\color{#C09B5A}\bfseries}p{0.30\linewidth}
+                        >{\color{white}}p{0.62\linewidth}}
+        Limit Definition
+          & $\lim_{x\to c}f(x)=L$: $f(x)$ approaches $L$ as $x$ approaches $c$ from both sides\\[5pt]
+        \multicolumn{2}{l}{\color{#C09B5A}\rule{\linewidth}{0.5pt}}\\[3pt]
+        One-Sided Limits
+          & Left: $\lim_{x\to c^-}f(x)$;\quad Right: $\lim_{x\to c^+}f(x)$\\[5pt]
+        Existence Condition
+          & $\lim_{x\to c}f(x)=L \;\iff\; \lim_{x\to c^-}f(x) = \lim_{x\to c^+}f(x) = L$\\[5pt]
+        \multicolumn{2}{l}{\color{#C09B5A}\rule{\linewidth}{0.5pt}}\\[3pt]
+        Indeterminate Forms
+          & $\left[\frac{0}{0}\right]$ indicates further algebraic manipulation needed (factoring, conjugate, LCD)\\[5pt]
+        Squeeze Theorem
+          & $g(x) \le f(x) \le h(x)$ and $\lim g = \lim h = L \;\Rightarrow\; \lim f = L$\\[5pt]
+        \multicolumn{2}{l}{\color{#C09B5A}\rule{\linewidth}{0.5pt}}\\[3pt]
+        Continuity at a Point
+          & $f(c)$ defined, $\lim_{x\to c}f(x)$ exists, and $\lim_{x\to c}f(x) = f(c)$\\[5pt]
+        Discontinuity Types
+          & \textbf{Removable:} limit exists $\neq f(c)$ (hole)\newline
+            \textbf{Jump:} one-sided limits unequal (break)\newline
+            \textbf{Infinite:} approaches $\pm\infty$ (vertical asymptote)\\[5pt]
+        \multicolumn{2}{l}{\color{#C09B5A}\rule{\linewidth}{0.5pt}}\\[3pt]
+        Asymptotes
+          & \textbf{Vertical:} $\lim_{x\to c^\pm}f(x)=\pm\infty \;\Rightarrow\; x=c$\newline
+            \textbf{Horizontal:} $\lim_{x\to\pm\infty}f(x)=L \;\Rightarrow\; y=L$\\[5pt]
+        IVT (Intermediate Value)
+          & Continuous on $[a,b]$, $u$ strictly between $f(a)$ and $f(b)$ $\;\Rightarrow\; f(c)=u\vphantom{\Big)}$\\[5pt]
+        \end{tabular}
+        \end{tcolorbox}
+        """,
         2: "### Unit 2: Differentiation (Basics)\n- **Power Rule:** $\\frac{d}{dx}[x^n] = n x^{n-1}$\n- **Product Rule:** $\\frac{d}{dx}[uv] = u'v + uv'$\n- **Quotient Rule:** $\\frac{d}{dx}\\left[\\frac{u}{v}\\right] = \\frac{u'v - uv'}{v^2}$",
         3: "### Unit 3: Differentiation (Composite/Implicit)\n- **Chain Rule:** $\\frac{d}{dx}[f(g(x))] = f'(g(x)) \\cdot g'(x)$\n- **Implicit Differentiation:** Differentiate implicitly with respect to $x$ and solve for $\\frac{dy}{dx}$.",
         4: "### Unit 4: Contextual Applications of Differentiation\n- **Related Rates:** Rate of change with respect to time $t$.\n- **Linear Approximation:** $L(x) = f(a) + f'(a)(x-a)$",

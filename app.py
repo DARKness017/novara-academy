@@ -303,24 +303,40 @@ def dashboard_screen():
                 st.session_state.current_screen = "unit_detail"
                 st.rerun()
 
-    # --- SOCIAL MEDIA LINKS WITH REAL LOGOS ---
+    # --- MINIMALIST SOCIAL MEDIA FOOTER ---
     st.write("---")
     st.markdown("""
-    <div style='text-align: center; margin-top: 10px; padding-bottom: 20px;'>
-        <h3 style='color: #0B1B3D; margin-bottom: 20px;'>Connect with Novara Academy</h3>
-        
-        <a href='https://t.me/Novara_Academy' target='_blank' style='text-decoration: none; background-color: #0B1B3D; color: #C09B5A; padding: 10px 20px; border-radius: 8px; margin: 0 10px; font-weight: bold; border: 1px solid #C09B5A; display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px;'>
-            <img src='https://cdn.simpleicons.org/telegram/C09B5A' width='18' height='18' alt='Telegram'/> Telegram
+    <style>
+    .social-icon {
+        width: 32px;
+        height: 32px;
+        margin: 0 20px;
+        transition: transform 0.2s ease-in-out, opacity 0.2s;
+        opacity: 0.65;
+    }
+    .social-icon:hover {
+        transform: scale(1.15);
+        opacity: 1;
+    }
+    .social-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 15px;
+        padding-bottom: 30px;
+    }
+    </style>
+    
+    <div class="social-container">
+        <a href='https://t.me/Novara_Academy' target='_blank'>
+            <img class="social-icon" src='https://cdn.simpleicons.org/telegram/0B1B3D' alt='Telegram'/>
         </a>
-        
-        <a href='https://www.instagram.com/thenovaraacademy?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==' target='_blank' style='text-decoration: none; background-color: #0B1B3D; color: #C09B5A; padding: 10px 20px; border-radius: 8px; margin: 0 10px; font-weight: bold; border: 1px solid #C09B5A; display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px;'>
-            <img src='https://cdn.simpleicons.org/instagram/C09B5A' width='18' height='18' alt='Instagram'/> Instagram
+        <a href='https://www.instagram.com/thenovaraacademy?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==' target='_blank'>
+            <img class="social-icon" src='https://cdn.simpleicons.org/instagram/0B1B3D' alt='Instagram'/>
         </a>
-        
-        <a href='https://youtube.com/@thenovara_academy?si=-30csHCXkzrwEVO0' target='_blank' style='text-decoration: none; background-color: #0B1B3D; color: #C09B5A; padding: 10px 20px; border-radius: 8px; margin: 0 10px; font-weight: bold; border: 1px solid #C09B5A; display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px;'>
-            <img src='https://cdn.simpleicons.org/youtube/C09B5A' width='18' height='18' alt='YouTube'/> YouTube
+        <a href='https://youtube.com/@thenovara_academy?si=-30csHCXkzrwEVO0' target='_blank'>
+            <img class="social-icon" src='https://cdn.simpleicons.org/youtube/0B1B3D' alt='YouTube'/>
         </a>
-        
     </div>
     """, unsafe_allow_html=True)
 

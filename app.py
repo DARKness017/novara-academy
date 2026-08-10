@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import time
-import hashlib
 import matplotlib.pyplot as plt
 from supabase import create_client, Client
 import random
@@ -70,10 +69,6 @@ def init_connection():
 
 supabase = init_connection()
 
-# Password Hashing Helper
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
-
 # --- 3. Session State Management ---
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
@@ -97,17 +92,14 @@ if 'quiz_score' not in st.session_state:
 # --- 4. Core Application Logic (Now with Adaptive Engine!) ---
 def start_quiz(unit=None):
     if unit:
-        # If they pick a specific unit, just give them those questions
         response = supabase.table("questions").select("*").eq("unit_number", unit).execute()
         questions = response.data
         if questions:
             random.shuffle(questions)
     else:
-        # If they click "Full Adaptive Quiz", the Engine takes over!
         all_questions_response = supabase.table("questions").select("*").execute()
         all_questions = all_questions_response.data
         
-        # --- ADAPTIVE ALGORITHM START ---
         attempts_response = supabase.table("attempts").select("is_correct, questions(unit_number)").eq("user_id", st.session_state.user_id).execute()
         attempts = attempts_response.data
         
@@ -122,29 +114,24 @@ def start_quiz(unit=None):
                     unit_stats[u]['total'] += 1
                     unit_stats[u]['correct'] += a['is_correct']
             
-            # Identify units below the 60% accuracy threshold
             for u, stats in unit_stats.items():
                 if (stats['correct'] / stats['total']) < 0.60:
                     weak_units.append(u)
         
-        # Build the dynamically prioritized question pool
         if weak_units:
             st.toast(f"🧠 Adaptive Engine Triggered: Prioritizing Units {weak_units}", icon="🎯")
             weak_q = [q for q in all_questions if q['unit_number'] in weak_units]
             strong_q = [q for q in all_questions if q['unit_number'] not in weak_units]
             random.shuffle(weak_q)
             random.shuffle(strong_q)
-            # Combine: heavily weight weak questions first
             questions = weak_q + strong_q
         else:
             questions = all_questions
             if questions:
                 random.shuffle(questions)
             
-        # Limit to 10 questions per quiz session for pacing
         if questions:
             questions = questions[:10]
-        # --- ADAPTIVE ALGORITHM END ---
 
     if not questions:
         st.warning("No questions found for this selection yet! Please try another unit.")
@@ -180,32 +167,34 @@ def submit_answer(selected_option):
     st.session_state.q_start_time = time.time()
     st.rerun()
 
-# --- 5. UI Screens ---
+# --- 5. UI Screens (NOW WITH ENTERPRISE AUTH) ---
 def login_screen():
     st.markdown("<h1 style='text-align: center; color: #0B1B3D;'>🎓 Novara Academy</h1>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>Secure Adaptive Quiz Engine</h3>", unsafe_allow_html=True)
     st.write("---")
 
-    tab1, tab2 = st.tabs(["Log In", "Create Account"])
+    # 👇 THIS IS THE NEW 3-TAB SYSTEM!
+    tab1, tab2, tab3 = st.tabs(["Log In", "Create Account", "Forgot Password"])
     
     with tab1:
         login_email = st.text_input("Email Address", key="login_email")
         login_password = st.text_input("Password", type="password", key="login_password")
         if st.button("Log In", type="primary"):
             if login_email and login_password:
-                hashed_pw = hash_password(login_password)
-                response = supabase.table("users").select("*").eq("email", login_email).eq("password_hash", hashed_pw).execute()
-                if response.data:
-                    user = response.data[0]
-                    st.session_state.logged_in = True
-                    st.session_state.user_id = user['user_id']
-                    st.session_state.username = user['username']
-                    st.session_state.current_screen = "dashboard"
-                    st.success(f"Welcome back, {user['username']}!")
-                    time.sleep(1)
-                    st.rerun()
-                else:
-                    st.error("Invalid email or password.")
+                try:
+                    auth_response = supabase.auth.sign_in_with_password({"email": login_email, "password": login_password})
+                    user_record = supabase.table("users").select("*").eq("email", login_email).execute()
+                    if user_record.data:
+                        user = user_record.data[0]
+                        st.session_state.logged_in = True
+                        st.session_state.user_id = user['user_id']
+                        st.session_state.username = user['username']
+                        st.session_state.current_screen = "dashboard"
+                        st.success(f"Welcome back, {user['username']}!")
+                        time.sleep(1)
+                        st.rerun()
+                except Exception as e:
+                    st.error("Invalid email or password. Please try again.")
             else:
                 st.warning("Please fill in both fields.")
 
@@ -215,20 +204,34 @@ def login_screen():
         reg_password = st.text_input("Password", type="password", key="reg_password")
         if st.button("Create Account", type="primary"):
             if reg_username and reg_email and reg_password:
-                hashed_pw = hash_password(reg_password)
-                check = supabase.table("users").select("*").eq("email", reg_email).execute()
-                if check.data:
-                    st.error("An account with this email already exists.")
-                else:
-                    new_user = supabase.table("users").insert({
-                        "username": reg_username,
-                        "email": reg_email,
-                        "password_hash": hashed_pw
-                    }).execute()
-                    if new_user.data:
-                        st.success("Account created successfully! Please Log In.")
+                try:
+                    auth_response = supabase.auth.sign_up({"email": reg_email, "password": reg_password})
+                    check = supabase.table("users").select("*").eq("email", reg_email).execute()
+                    if not check.data:
+                        supabase.table("users").insert({
+                            "username": reg_username,
+                            "email": reg_email,
+                            "password_hash": "SECURED_BY_SUPABASE_AUTH" 
+                        }).execute()
+                    st.success("✅ Account created successfully! You can now Log In.")
+                except Exception as e:
+                    st.error(f"Registration failed: An account with this email may already exist.")
             else:
                 st.warning("Please fill in all fields.")
+                
+    with tab3:
+        st.markdown("### 🔒 Reset Your Password")
+        st.write("Enter your email address and we will send you a secure reset link.")
+        reset_email = st.text_input("Account Email", key="reset_email")
+        if st.button("Send Reset Link", type="primary"):
+            if reset_email:
+                try:
+                    supabase.auth.reset_password_for_email(reset_email)
+                    st.success("✅ Secure reset link sent! Please check your email inbox.")
+                except Exception as e:
+                    st.error("Could not send reset link. Ensure the email is correct.")
+            else:
+                st.warning("Please enter your email address.")
 
 def dashboard_screen():
     st.markdown(f"<h1 style='text-align: center; color: #0B1B3D;'>Welcome, {st.session_state.username}!</h1>", unsafe_allow_html=True)
@@ -237,6 +240,7 @@ def dashboard_screen():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if st.button("↩️ Log Out", use_container_width=True, type="primary"):
+            supabase.auth.sign_out() 
             st.session_state.clear()
             st.rerun()
         st.write("")
@@ -301,14 +305,13 @@ def analytics_screen():
     
     if data:
         processed = []
-        slow_units = set() # To track latency > 90s
+        slow_units = set() 
         
         for item in data:
             if item.get('questions'):
                 unit_num = item['questions']['unit_number']
                 processed.append({"unit": f"Unit {unit_num}", "correct": item['is_correct']})
                 
-                # Latency Tracking: Flag if correct but took > 90 seconds
                 if item['is_correct'] == 1 and item['time_taken_seconds'] > 90:
                     slow_units.add(unit_num)
         
@@ -330,7 +333,6 @@ def analytics_screen():
             
             st.pyplot(fig)
             
-            # Display Speed Warnings dynamically 
             if slow_units:
                 sorted_slow = sorted(list(slow_units))
                 st.warning(f"⏱️ **Speed Improvement Needed:** You have correct answers that took longer than 90 seconds in **Units: {', '.join(map(str, sorted_slow))}**. The AP exam requires faster pacing here!")

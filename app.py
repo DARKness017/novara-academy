@@ -303,6 +303,17 @@ def dashboard_screen():
                 st.session_state.current_screen = "unit_detail"
                 st.rerun()
 
+    # --- NEW: SOCIAL MEDIA LINKS ---
+    st.write("---")
+    st.markdown("""
+    <div style='text-align: center; margin-top: 10px; padding-bottom: 20px;'>
+        <h3 style='color: #0B1B3D; margin-bottom: 20px;'>Connect with Novara Academy</h3>
+        <a href='https://t.me/Novara_Academy' target='_blank' style='text-decoration: none; background-color: #0B1B3D; color: #C09B5A; padding: 10px 20px; border-radius: 8px; margin: 0 10px; font-weight: bold; border: 1px solid #C09B5A; display: inline-block; margin-bottom: 10px;'>✈️ Telegram</a>
+        <a href='https://www.instagram.com/thenovaraacademy?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==' target='_blank' style='text-decoration: none; background-color: #0B1B3D; color: #C09B5A; padding: 10px 20px; border-radius: 8px; margin: 0 10px; font-weight: bold; border: 1px solid #C09B5A; display: inline-block; margin-bottom: 10px;'>📸 Instagram</a>
+        <a href='https://youtube.com/@thenovara_academy?si=-30csHCXkzrwEVO0' target='_blank' style='text-decoration: none; background-color: #0B1B3D; color: #C09B5A; padding: 10px 20px; border-radius: 8px; margin: 0 10px; font-weight: bold; border: 1px solid #C09B5A; display: inline-block; margin-bottom: 10px;'>▶️ YouTube</a>
+    </div>
+    """, unsafe_allow_html=True)
+
 def unit_detail_screen():
     unit_num = st.session_state.selected_unit
     unit_name = st.session_state.selected_unit_name

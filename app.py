@@ -4,6 +4,7 @@ import time
 import hashlib
 import matplotlib.pyplot as plt
 from supabase import create_client, Client
+import random
 
 # --- 1. Page Config & Theming ---
 st.set_page_config(page_title="Novara Academy - Adaptive Engine", page_icon="🎓", layout="centered")
@@ -74,19 +75,62 @@ if 'q_start_time' not in st.session_state:
 if 'quiz_score' not in st.session_state:
     st.session_state.quiz_score = 0
 
-# --- 4. Core Application Logic ---
-def fetch_questions(unit=None):
-    if unit:
-        response = supabase.table("questions").select("*").eq("unit_number", unit).execute()
-    else:
-        response = supabase.table("questions").select("*").execute()
-    return response.data
-
+# --- 4. Core Application Logic (Now with Adaptive Engine!) ---
 def start_quiz(unit=None):
-    questions = fetch_questions(unit)
+    if unit:
+        # If they pick a specific unit, just give them those questions
+        response = supabase.table("questions").select("*").eq("unit_number", unit).execute()
+        questions = response.data
+        if questions:
+            random.shuffle(questions)
+    else:
+        # If they click "Full Adaptive Quiz", the Engine takes over!
+        all_questions_response = supabase.table("questions").select("*").execute()
+        all_questions = all_questions_response.data
+        
+        # --- ADAPTIVE ALGORITHM START ---
+        attempts_response = supabase.table("attempts").select("is_correct, questions(unit_number)").eq("user_id", st.session_state.user_id).execute()
+        attempts = attempts_response.data
+        
+        weak_units = []
+        if attempts:
+            unit_stats = {}
+            for a in attempts:
+                if a.get('questions'):
+                    u = a['questions']['unit_number']
+                    if u not in unit_stats:
+                        unit_stats[u] = {'correct': 0, 'total': 0}
+                    unit_stats[u]['total'] += 1
+                    unit_stats[u]['correct'] += a['is_correct']
+            
+            # Identify units below the 60% accuracy threshold
+            for u, stats in unit_stats.items():
+                if (stats['correct'] / stats['total']) < 0.60:
+                    weak_units.append(u)
+        
+        # Build the dynamically prioritized question pool
+        if weak_units:
+            st.toast(f"🧠 Adaptive Engine Triggered: Prioritizing Units {weak_units}", icon="🎯")
+            weak_q = [q for q in all_questions if q['unit_number'] in weak_units]
+            strong_q = [q for q in all_questions if q['unit_number'] not in weak_units]
+            random.shuffle(weak_q)
+            random.shuffle(strong_q)
+            # Combine: heavily weight weak questions first
+            questions = weak_q + strong_q
+        else:
+            questions = all_questions
+            if questions:
+                random.shuffle(questions)
+            
+        # Limit to 10 questions per quiz session for pacing
+        if questions:
+            questions = questions[:10]
+        # --- ADAPTIVE ALGORITHM END ---
+
     if not questions:
         st.warning("No questions found for this selection yet! Please try another unit.")
         return
+        
     st.session_state.quiz_questions = questions
     st.session_state.current_q_index = 0
     st.session_state.quiz_score = 0
@@ -233,14 +277,21 @@ def quiz_screen():
 def analytics_screen():
     st.markdown("<h1 style='text-align: center; color: #0B1B3D;'>📊 Performance Analytics</h1>", unsafe_allow_html=True)
     
-    response = supabase.table("attempts").select("is_correct, questions(unit_number)").eq("user_id", st.session_state.user_id).execute()
+    response = supabase.table("attempts").select("is_correct, time_taken_seconds, questions(unit_number)").eq("user_id", st.session_state.user_id).execute()
     data = response.data
     
     if data:
         processed = []
+        slow_units = set() # To track latency > 90s
+        
         for item in data:
             if item.get('questions'):
-                processed.append({"unit": f"Unit {item['questions']['unit_number']}", "correct": item['is_correct']})
+                unit_num = item['questions']['unit_number']
+                processed.append({"unit": f"Unit {unit_num}", "correct": item['is_correct']})
+                
+                # Latency Tracking: Flag if correct but took > 90 seconds
+                if item['is_correct'] == 1 and item['time_taken_seconds'] > 90:
+                    slow_units.add(unit_num)
         
         if processed:
             df = pd.DataFrame(processed)
@@ -259,6 +310,11 @@ def analytics_screen():
             plt.xticks(rotation=0)
             
             st.pyplot(fig)
+            
+            # Display Speed Warnings dynamically 
+            if slow_units:
+                sorted_slow = sorted(list(slow_units))
+                st.warning(f"⏱️ **Speed Improvement Needed:** You have correct answers that took longer than 90 seconds in **Units: {', '.join(map(str, sorted_slow))}**. The AP exam requires faster pacing here!")
         else:
             st.info("No unit data found for your attempts.")
     else:

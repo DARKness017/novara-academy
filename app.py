@@ -12,6 +12,17 @@ st.set_page_config(page_title="Novara Academy - Adaptive Engine", page_icon="ðŸŽ
 # --- Custom CSS Styling ---
 st.markdown("""
     <style>
+    /* --- 1. REMOVE STREAMLIT BRANDING & ADJUST PADDING --- */
+    #MainMenu {visibility: hidden;}
+    header {visibility: hidden;}
+    footer {visibility: hidden;}
+    
+    .block-container {
+        padding-top: 2rem !important;
+        padding-bottom: 0rem !important;
+    }
+
+    /* --- 2. NOVARA ACADEMY BUTTON STYLING --- */
     /* Default buttons (Unit buttons) = Deep Navy */
     .stButton > button {
         background-color: #0B1B3D !important;

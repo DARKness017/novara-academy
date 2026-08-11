@@ -29,15 +29,17 @@ st.markdown("""
     }
 
     /* --- 2. NOVARA ACADEMY BUTTON STYLING --- */
+    .stButton > button {
+        background-color: #0B1B3D !important;
+        color: white !important;
+        border-radius: 8px !important;
+        border: 1px solid #C09B5A !important;
+        font-weight: 500;
+    }
     .stButton > button[kind="primary"]:hover {
         background-color: #0B1B3D !important;
         color: white !important;
         border: 1px solid #C09B5A !important; /* <--- CHANGED THIS TO GOLD */
-    }
-    .stButton > button:hover {
-        background-color: #C09B5A !important;
-        color: #0B1B3D !important;
-        border: 1px solid #0B1B3D !important;
     }
     
     .stButton > button[kind="primary"] {

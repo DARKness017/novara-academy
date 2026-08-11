@@ -5,6 +5,7 @@ import hashlib
 import matplotlib.pyplot as plt
 from supabase import create_client, Client
 import random
+from datetime import date, timedelta
 
 # --- 1. Page Config & Theming ---
 st.set_page_config(page_title="Novara Academy - Adaptive Engine", page_icon="🎓", layout="centered")

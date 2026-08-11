@@ -812,50 +812,120 @@ def quiz_screen():
             submit_answer(choice_label)
 
 def analytics_screen():
-    st.markdown("<h1 style='text-align: center; color: #0B1B3D;'>📊 Performance Analytics</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #0B1B3D;'>📊 Advanced Analytics Dashboard</h1>", unsafe_allow_html=True)
+    st.write("---")
+    
+    # Custom CSS to turn Streamlit metrics into floating SaaS KPI Cards
+    st.markdown("""
+        <style>
+        div[data-testid="metric-container"] {
+            background-color: #FFFFFF;
+            border: 2px solid #C09B5A;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        div[data-testid="metric-container"] label {
+            color: #0B1B3D !important;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        div[data-testid="metric-container"] div {
+            color: #0B1B3D !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
     
     response = supabase.table("attempts").select("is_correct, time_taken_seconds, questions(unit_number)").eq("user_id", st.session_state.user_id).execute()
     data = response.data
     
     if data:
-        processed = []
-        slow_units = set() 
+        df = pd.DataFrame(data)
+        # Clean up the nested dictionary from the Supabase join
+        df['unit_number'] = df['questions'].apply(lambda x: x['unit_number'] if x else None)
         
+        # --- 1. KPI CARDS ---
+        total_q = len(df)
+        accuracy = (df['is_correct'].sum() / total_q) * 100
+        avg_speed = df['time_taken_seconds'].mean()
+        
+        # Calculate "Units Mastered" (Units where accuracy is >= 60%)
+        unit_acc = df.groupby('unit_number')['is_correct'].mean() * 100
+        mastered_units = (unit_acc >= 60).sum()
+        
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric(label="Questions Answered", value=f"{total_q}")
+        with col2:
+            st.metric(label="All-Time Accuracy", value=f"{accuracy:.1f}%")
+        with col3:
+            st.metric(label="Average Speed", value=f"{avg_speed:.1f}s")
+        with col4:
+            st.metric(label="Units Mastered", value=f"{mastered_units}/10")
+            
+        st.write("---")
+
+        # --- 2. IMPROVEMENT OVER TIME LINE CHART ---
+        st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>📈 Accuracy Trend Over Time</h3>", unsafe_allow_html=True)
+        
+        # Calculate cumulative accuracy as they answer more questions
+        df['Cumulative Accuracy'] = df['is_correct'].expanding().mean() * 100
+        
+        fig_line, ax_line = plt.subplots(figsize=(8, 3))
+        ax_line.plot(df.index + 1, df['Cumulative Accuracy'], color='#C09B5A', linewidth=2.5, marker='o', markersize=4)
+        ax_line.set_ylabel('Accuracy (%)', color='#0B1B3D', fontweight='bold')
+        ax_line.set_xlabel('Total Questions Answered', color='#0B1B3D', fontweight='bold')
+        ax_line.set_ylim(0, 105)
+        ax_line.axhline(60, color='red', linestyle=':', label='60% Threshold', alpha=0.5)
+        
+        # Clean up chart borders
+        ax_line.spines['top'].set_visible(False)
+        ax_line.spines['right'].set_visible(False)
+        ax_line.spines['bottom'].set_color('#0B1B3D')
+        ax_line.spines['left'].set_color('#0B1B3D')
+        ax_line.tick_params(colors='#0B1B3D')
+        
+        st.pyplot(fig_line)
+        st.write("---")
+
+        # --- 3. UNIT BREAKDOWN BAR CHART ---
+        st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>📊 Unit Performance Breakdown</h3>", unsafe_allow_html=True)
+        
+        fig_bar, ax_bar = plt.subplots(figsize=(8, 4))
+        unit_acc.plot(kind='bar', ax=ax_bar, color='#0B1B3D', edgecolor='#C09B5A', width=0.7)
+        
+        ax_bar.set_ylabel('Accuracy (%)', color='#0B1B3D', fontweight='bold')
+        ax_bar.set_xlabel('Unit Number', color='#0B1B3D', fontweight='bold')
+        ax_bar.set_ylim(0, 105)
+        ax_bar.axhline(60, color='#C09B5A', linestyle='--', label='60% Threshold')
+        ax_bar.legend()
+        
+        ax_bar.spines['top'].set_visible(False)
+        ax_bar.spines['right'].set_visible(False)
+        ax_bar.spines['bottom'].set_color('#0B1B3D')
+        ax_bar.spines['left'].set_color('#0B1B3D')
+        ax_bar.tick_params(colors='#0B1B3D')
+        plt.xticks(rotation=0)
+        
+        st.pyplot(fig_bar)
+        
+        # --- 4. ADAPTIVE SPEED WARNINGS ---
+        slow_units = set()
         for item in data:
-            if item.get('questions'):
-                unit_num = item['questions']['unit_number']
-                processed.append({"unit": f"Unit {unit_num}", "correct": item['is_correct']})
-                
-                if item['is_correct'] == 1 and item['time_taken_seconds'] > 90:
-                    slow_units.add(unit_num)
-        
-        if processed:
-            df = pd.DataFrame(processed)
-            summary = df.groupby('unit')['correct'].mean() * 100
+            if item['is_correct'] == 1 and item['time_taken_seconds'] > 90:
+                if item.get('questions'):
+                    slow_units.add(item['questions']['unit_number'])
+                    
+        if slow_units:
+            sorted_slow = sorted(list(slow_units))
+            st.warning(f"⏱️ **Speed Improvement Needed:** You have correct answers that took longer than 90 seconds in **Units: {', '.join(map(str, sorted_slow))}**. The AP exam requires faster pacing here!")
             
-            fig, ax = plt.subplots(figsize=(8, 4))
-            summary.plot(kind='bar', ax=ax, color='#0B1B3D', edgecolor='#C09B5A', width=0.7)
-            
-            ax.set_ylabel('Accuracy (%)')
-            ax.set_ylim(0, 100)
-            ax.axhline(60, color='#C09B5A', linestyle='--', label='60% Threshold')
-            ax.legend()
-            
-            ax.spines['top'].set_visible(False)
-            ax.spines['right'].set_visible(False)
-            plt.xticks(rotation=0)
-            
-            st.pyplot(fig)
-            
-            if slow_units:
-                sorted_slow = sorted(list(slow_units))
-                st.warning(f"⏱️ **Speed Improvement Needed:** You have correct answers that took longer than 90 seconds in **Units: {', '.join(map(str, sorted_slow))}**. The AP exam requires faster pacing here!")
-        else:
-            st.info("No unit data found for your attempts.")
     else:
         st.info("You haven't taken any quizzes yet! Start a quiz to see your analytics.")
         
-    if st.button("← Back to Dashboard", type="primary"):
+    st.write("---")
+    if st.button("← Back to Dashboard", type="primary", use_container_width=True):
         st.session_state.current_screen = "dashboard"
         st.rerun()
 

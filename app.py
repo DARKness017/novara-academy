@@ -64,11 +64,11 @@ st.markdown("""
         border-bottom-right-radius: 12px !important;
         color: white !important;
         width: 100% !important;
-        margin-top: -10px !important; /* Pulls it flush with the header div */
+        margin-top: -10px !important;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
     }
     .stMarkdown th {
-        display: none !important; /* Hides the default markdown headers */
+        display: none !important;
     }
     .stMarkdown td {
         border-bottom: 1px solid #C09B5A !important;
@@ -80,13 +80,21 @@ st.markdown("""
         font-size: 14px !important;
     }
     .stMarkdown tr:last-child td {
-        border-bottom: none !important; /* Removes border from last row */
+        border-bottom: none !important;
     }
-    /* Style the left column specifically to be Gold and Bold */
     .stMarkdown td:first-child {
         color: #C09B5A !important;
         font-weight: bold !important;
         width: 28% !important;
+    }
+
+    /* --- 4. SAAS SIDEBAR STYLING --- */
+    [data-testid="stSidebar"] {
+        background-color: #0B1B3D !important;
+        border-right: 2px solid #C09B5A !important;
+    }
+    [data-testid="stSidebar"] hr {
+        border-bottom: 1px solid #C09B5A !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -179,6 +187,7 @@ def start_quiz(unit=None):
     st.session_state.quiz_questions = questions
     st.session_state.current_q_index = 0
     st.session_state.quiz_score = 0
+    st.session_state.user_answers = []
     st.session_state.quiz_started = True
     st.session_state.q_start_time = time.time()
     st.session_state.current_screen = "quiz"
@@ -194,7 +203,6 @@ def submit_answer(selected_option):
     if is_correct:
         st.session_state.quiz_score += 1
 
-    # --- NEW: Save the exact answer data for the Review Screen ---
     st.session_state.user_answers.append({
         'question': current_q['question_text'],
         'selected': selected_option,
@@ -216,11 +224,10 @@ def submit_answer(selected_option):
     st.session_state.q_start_time = time.time()
     st.rerun()
 
-# --- 5. UI Screens ---
-
 def hash_password(password):
-    """Scrambles the password into a secure hash before saving to the database"""
     return hashlib.sha256(password.encode()).hexdigest()
+
+# --- 5. UI Screens ---
 
 def login_screen():
     st.markdown("<h1 style='text-align: center; color: #0B1B3D;'>🎓 Novara Academy</h1>", unsafe_allow_html=True)
@@ -236,7 +243,6 @@ def login_screen():
         if st.button("Log In", type="primary"):
             if login_email and login_password:
                 try:
-                    # Hash the typed password to see if it matches the database
                     hashed_pw = hash_password(login_password)
                     user_record = supabase.table("users").select("*").eq("email", login_email).eq("password_hash", hashed_pw).execute()
                     
@@ -264,13 +270,9 @@ def login_screen():
         if st.button("Create Account", type="primary"):
             if reg_username and reg_email and reg_password:
                 try:
-                    # Check if email already exists on the roster
                     check = supabase.table("users").select("*").eq("email", reg_email).execute()
                     if not check.data:
-                        # Hash the new password
                         hashed_pw = hash_password(reg_password)
-                        
-                        # Save directly to custom users table
                         supabase.table("users").insert({
                             "username": reg_username,
                             "email": reg_email,
@@ -286,22 +288,8 @@ def login_screen():
 
 def dashboard_screen():
     st.markdown(f"<h1 style='text-align: center; color: #0B1B3D;'>Welcome, {st.session_state.username}!</h1>", unsafe_allow_html=True)
-    st.write("---")
-    
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if st.button("↩️ Log Out", use_container_width=True, type="primary"):
-            st.session_state.clear()
-            st.rerun()
-        st.write("")
-        if st.button("🚀 Start Full Adaptive Quiz", type="primary", use_container_width=True):
-            start_quiz()
-        if st.button("📊 View All-Time Analytics", use_container_width=True, type="primary"):
-            st.session_state.current_screen = "analytics"
-            st.rerun()
-            
-    st.write("---")
     st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>AP Calculus Units</h3>", unsafe_allow_html=True)
+    st.write("---")
     
     units = [
         "Unit 1: Limits & Continuity", 
@@ -371,10 +359,6 @@ def dashboard_screen():
 def unit_detail_screen():
     unit_num = st.session_state.selected_unit
     unit_name = st.session_state.selected_unit_name
-    
-    if st.button("← Back to Dashboard", type="primary"):
-        st.session_state.current_screen = "dashboard"
-        st.rerun()
         
     st.markdown(f"<h1 style='text-align: center; color: #0B1B3D;'>{unit_name}</h1>", unsafe_allow_html=True)
     st.write("---")
@@ -762,7 +746,6 @@ def unit_detail_screen():
         st.markdown(cheat_sheets.get(unit_num, "*Add your custom formulas for this unit here!*"), unsafe_allow_html=True)
 
 def quiz_screen():
-    # --- POST-QUIZ REVIEW SCREEN ---
     if st.session_state.current_q_index >= len(st.session_state.quiz_questions):
         st.markdown("<h2 style='text-align: center; color: #0B1B3D;'>Quiz Complete! 🎉</h2>", unsafe_allow_html=True)
         st.markdown(f"<h3 style='text-align: center; color: #C09B5A;'>Your Score: {st.session_state.quiz_score} / {len(st.session_state.quiz_questions)}</h3>", unsafe_allow_html=True)
@@ -770,28 +753,19 @@ def quiz_screen():
         
         st.markdown("<h3 style='color: #0B1B3D;'>Question Review</h3>", unsafe_allow_html=True)
         
-        # Loop through the saved answers and display the glowing boxes
         for i, ans in enumerate(st.session_state.user_answers):
             st.markdown(f"**Q{i+1}:** {ans['question']}")
             
             if ans['is_correct']:
-                # Native Green Success Box
                 st.success(f"**✅ Correct:** {ans['selected']}) {ans['selected_text']}")
             else:
-                # Native Red Glowing Error Box showing what they clicked vs the right answer
                 st.error(f"**❌ Incorrect:** You chose {ans['selected']}) {ans['selected_text']} \n\n **💡 Right Answer:** {ans['correct']}) {ans['correct_text']}")
             
-            st.write("") # Add a little spacing between questions
+            st.write("")
             
         st.write("---")
-        if st.button("Return to Dashboard", type="primary", use_container_width=True):
-            st.session_state.quiz_started = False
-            st.session_state.user_answers = [] # Clear memory for next quiz
-            st.session_state.current_screen = "dashboard"
-            st.rerun()
         return
 
-    # --- ACTIVE QUIZ SCREEN ---
     q = st.session_state.quiz_questions[st.session_state.current_q_index]
     st.progress((st.session_state.current_q_index) / len(st.session_state.quiz_questions))
     st.markdown(f"**Question {st.session_state.current_q_index + 1} of {len(st.session_state.quiz_questions)}** (Unit {q['unit_number']} - {q['difficulty']})")
@@ -815,7 +789,6 @@ def analytics_screen():
     st.markdown("<h1 style='text-align: center; color: #0B1B3D;'>📊 Advanced Analytics Dashboard</h1>", unsafe_allow_html=True)
     st.write("---")
     
-    # Custom CSS to turn Streamlit metrics into floating SaaS KPI Cards
     st.markdown("""
         <style>
         div[data-testid="metric-container"] {
@@ -842,15 +815,12 @@ def analytics_screen():
     
     if data:
         df = pd.DataFrame(data)
-        # Clean up the nested dictionary from the Supabase join
         df['unit_number'] = df['questions'].apply(lambda x: x['unit_number'] if x else None)
         
-        # --- 1. KPI CARDS ---
         total_q = len(df)
         accuracy = (df['is_correct'].sum() / total_q) * 100
         avg_speed = df['time_taken_seconds'].mean()
         
-        # Calculate "Units Mastered" (Units where accuracy is >= 60%)
         unit_acc = df.groupby('unit_number')['is_correct'].mean() * 100
         mastered_units = (unit_acc >= 60).sum()
         
@@ -866,10 +836,8 @@ def analytics_screen():
             
         st.write("---")
 
-        # --- 2. IMPROVEMENT OVER TIME LINE CHART ---
         st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>📈 Accuracy Trend Over Time</h3>", unsafe_allow_html=True)
         
-        # Calculate cumulative accuracy as they answer more questions
         df['Cumulative Accuracy'] = df['is_correct'].expanding().mean() * 100
         
         fig_line, ax_line = plt.subplots(figsize=(8, 3))
@@ -879,7 +847,6 @@ def analytics_screen():
         ax_line.set_ylim(0, 105)
         ax_line.axhline(60, color='red', linestyle=':', label='60% Threshold', alpha=0.5)
         
-        # Clean up chart borders
         ax_line.spines['top'].set_visible(False)
         ax_line.spines['right'].set_visible(False)
         ax_line.spines['bottom'].set_color('#0B1B3D')
@@ -889,7 +856,6 @@ def analytics_screen():
         st.pyplot(fig_line)
         st.write("---")
 
-        # --- 3. UNIT BREAKDOWN BAR CHART ---
         st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>📊 Unit Performance Breakdown</h3>", unsafe_allow_html=True)
         
         fig_bar, ax_bar = plt.subplots(figsize=(8, 4))
@@ -910,7 +876,6 @@ def analytics_screen():
         
         st.pyplot(fig_bar)
         
-        # --- 4. ADAPTIVE SPEED WARNINGS ---
         slow_units = set()
         for item in data:
             if item['is_correct'] == 1 and item['time_taken_seconds'] > 90:
@@ -923,16 +888,39 @@ def analytics_screen():
             
     else:
         st.info("You haven't taken any quizzes yet! Start a quiz to see your analytics.")
-        
-    st.write("---")
-    if st.button("← Back to Dashboard", type="primary", use_container_width=True):
-        st.session_state.current_screen = "dashboard"
-        st.rerun()
 
-# --- 6. Screen Router ---
+# --- 6. Screen Router & SaaS Sidebar ---
 if not st.session_state.logged_in:
     login_screen()
 else:
+    # --- The New SaaS Sidebar ---
+    with st.sidebar:
+        st.markdown("<h2 style='text-align: center; color: white;'>🎓 Novara Profile</h2>", unsafe_allow_html=True)
+        
+        # Dynamically fetch Total XP (Total Correct Answers)
+        response = supabase.table("attempts").select("is_correct").eq("user_id", st.session_state.user_id).execute()
+        total_score = sum([1 for item in response.data if item['is_correct'] == 1]) if response.data else 0
+        
+        st.markdown(f"<div style='text-align: center; color: #C09B5A; font-size: 18px; margin-bottom: 20px;'><b>👤 {st.session_state.username}</b><br>⭐ Total XP: {total_score}</div>", unsafe_allow_html=True)
+        
+        # Sidebar Navigation
+        if st.button("🏠 Home (Dashboard)", use_container_width=True, type="primary"):
+            st.session_state.current_screen = "dashboard"
+            st.rerun()
+            
+        if st.button("🚀 Start Full Adaptive Quiz", use_container_width=True, type="primary"):
+            start_quiz()
+            
+        if st.button("📊 View Analytics", use_container_width=True, type="primary"):
+            st.session_state.current_screen = "analytics"
+            st.rerun()
+            
+        st.write("---")
+        if st.button("↩️ Log Out", use_container_width=True):
+            st.session_state.clear()
+            st.rerun()
+
+    # Route to the correct content screen
     if st.session_state.current_screen == "dashboard":
         dashboard_screen()
     elif st.session_state.current_screen == "unit_detail":

@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from supabase import create_client, Client
 import random
 from datetime import date, timedelta
+import streamlit.components.v1 as components
 
 # --- 1. Page Config & Theming ---
 st.set_page_config(page_title="Novara Academy - Adaptive Engine", page_icon="🎓", layout="centered")
@@ -221,7 +222,7 @@ def submit_answer(selected_option):
         st.session_state.quiz_score += 1
 
     st.session_state.user_answers.append({
-        'question_id': current_q['question_id'],  # Added to track which question was saved
+        'question_id': current_q['question_id'],
         'question': current_q['question_text'],
         'selected': selected_option,
         'selected_text': current_q[f"option_{selected_option.lower()}"],
@@ -908,9 +909,40 @@ def quiz_screen():
             st.rerun()
         return
 
+    # --- ACTIVE QUIZ SCREEN ---
     q = st.session_state.quiz_questions[st.session_state.current_q_index]
     st.progress((st.session_state.current_q_index) / len(st.session_state.quiz_questions))
     st.markdown(f"**Question {st.session_state.current_q_index + 1} of {len(st.session_state.quiz_questions)}** (Unit {q['unit_number']} - {q['difficulty']})")
+    
+    # --- ⏱️ THE LIVE TICKING TIMER ---
+    elapsed = int(time.time() - st.session_state.q_start_time)
+    components.html(
+        f"""
+        <div style="font-family: sans-serif; text-align: right; color: #0B1B3D; font-size: 18px; font-weight: bold; margin-top: -30px;">
+            ⏱️ Time Elapsed: <span id="clock"></span>
+        </div>
+        <script>
+            let time_elapsed = {elapsed};
+            const clock_div = document.getElementById("clock");
+            
+            setInterval(() => {{
+                let minutes = Math.floor(time_elapsed / 60);
+                let seconds = time_elapsed % 60;
+                
+                // Format with leading zeros
+                let formatted_time = (minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+                clock_div.innerText = formatted_time;
+                
+                // Turn red if it passes the 90-second AP Exam threshold
+                if (time_elapsed > 90) {{
+                    clock_div.style.color = "#FF4B4B";
+                }}
+                time_elapsed++;
+            }}, 1000);
+        </script>
+        """,
+        height=30
+    )
     
     st.markdown(f"### {q['question_text']}")
     

@@ -757,7 +757,10 @@ def unit_detail_screen():
 """,
     }
     
-    st.markdown(cheat_sheets.get(unit_num, "*Add your custom formulas for this unit here!*"), unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>2. AP Calculus Formula Cheat Sheets</h3>", unsafe_allow_html=True)
+    
+    with st.expander("📚 View Unit Formulas & Cheat Sheets (Click to Expand)"):
+        st.markdown(cheat_sheets.get(unit_num, "*Add your custom formulas for this unit here!*"), unsafe_allow_html=True)
 
 def quiz_screen():
     # --- POST-QUIZ REVIEW SCREEN ---

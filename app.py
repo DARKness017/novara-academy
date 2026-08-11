@@ -92,7 +92,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- 2. Cloud Database Connection (Supabase) ---
-@st.cache_resource
 def init_connection():
     url = st.secrets["SUPABASE_URL"]
     key = st.secrets["SUPABASE_KEY"]

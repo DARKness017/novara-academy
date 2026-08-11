@@ -949,6 +949,7 @@ else:
         
         st.markdown(f"<div style='text-align: center; color: #C09B5A; font-size: 18px; margin-bottom: 20px;'><b>👤 {st.session_state.username}</b><br>⭐ Total XP: {total_score}</div>", unsafe_allow_html=True)
         
+        # --- THE MISSING HOME BUTTON ---
         if st.button("🏠 Home (Dashboard)", use_container_width=True, type="primary"):
             st.session_state.current_screen = "dashboard"
             st.rerun()
@@ -957,7 +958,7 @@ else:
             start_quiz()
             
         # THE NEW VAULT BUTTON
-        if st.button("⭐ Review Saved Questions", use_container_width=True):
+        if st.button("⭐ Review Saved Questions", use_container_width=True, type="primary"):
             start_saved_quiz()
             
         if st.button("📊 View Analytics", use_container_width=True, type="primary"):
@@ -965,7 +966,7 @@ else:
             st.rerun()
             
         st.write("---")
-        if st.button("↩️ Log Out", use_container_width=True):
+        if st.button("↩️ Log Out", use_container_width=True, type="primary"):
             st.session_state.clear()
             st.rerun()
 

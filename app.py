@@ -305,6 +305,54 @@ def login_screen():
 
 def dashboard_screen():
     st.markdown(f"<h1 style='text-align: center; color: #0B1B3D;'>Welcome, {st.session_state.username}!</h1>", unsafe_allow_html=True)
+    
+    # --- ⏱️ AP EXAM COUNTDOWN & STREAK TRACKER ---
+    exam_date = date(2027, 5, 10)
+    today = date.today()
+    days_left = (exam_date - today).days
+    
+    # Calculate Streak from Supabase 'created_at' timestamps
+    streak = 0
+    try:
+        response = supabase.table("attempts").select("created_at").eq("user_id", st.session_state.user_id).execute()
+        if response.data:
+            # Extract unique dates the user was active
+            active_dates = set()
+            for row in response.data:
+                if row.get("created_at"):
+                    active_dates.add(row["created_at"][:10]) # Extracts 'YYYY-MM-DD'
+            
+            # Check streak counting backwards from today
+            current_date = today
+            while current_date.strftime("%Y-%m-%d") in active_dates:
+                streak += 1
+                current_date -= timedelta(days=1)
+            
+            # If streak is 0, check if they played yesterday (meaning their streak is still alive, they just haven't played TODAY yet)
+            if streak == 0:
+                current_date = today - timedelta(days=1)
+                while current_date.strftime("%Y-%m-%d") in active_dates:
+                    streak += 1
+                    current_date -= timedelta(days=1)
+    except Exception:
+        pass # Failsafe in case created_at column is missing
+
+    # Render the sleek SaaS Widgets
+    st.markdown(f"""
+    <div style="display: flex; justify-content: space-between; margin-bottom: 30px; margin-top: 20px;">
+        <div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-radius: 12px; padding: 20px; width: 48%; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <h4 style="color: white; margin-top: 0; margin-bottom: 10px; font-size: 16px;">⏱️ AP Calc Exam</h4>
+            <h1 style="color: #C09B5A; margin: 0; font-size: 36px;">{days_left}</h1>
+            <p style="color: white; margin: 10px 0 0 0; font-size: 14px;">Days Left (May 10)</p>
+        </div>
+        <div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-radius: 12px; padding: 20px; width: 48%; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <h4 style="color: white; margin-top: 0; margin-bottom: 10px; font-size: 16px;">🔥 Daily Streak</h4>
+            <h1 style="color: #C09B5A; margin: 0; font-size: 36px;">{streak}</h1>
+            <p style="color: white; margin: 10px 0 0 0; font-size: 14px;">Consecutive Days</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
     st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>AP Calculus Units</h3>", unsafe_allow_html=True)
     st.write("---")
     

@@ -52,10 +52,10 @@ st.markdown("""
     .stButton > button[kind="primary"]:hover {
         background-color: #0B1B3D !important;
         color: white !important;
-        border: 1px solid #C09B5A !important; /* <--- CHANGED THIS TO GOLD */
+        border: 1px solid #C09B5A !important; /* <--- YOUR GOLD HOVER FIX */
     }
 
-    /* --- 3. NATIVE MARKDOWN TABLE STYLING (For Perfect Math Rendering) --- */
+    /* --- 3. NATIVE MARKDOWN TABLE STYLING --- */
     .stMarkdown table {
         background-color: #0B1B3D !important;
         border: 2px solid #C09B5A !important;
@@ -67,9 +67,7 @@ st.markdown("""
         margin-top: -10px !important;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
     }
-    .stMarkdown th {
-        display: none !important;
-    }
+    .stMarkdown th { display: none !important; }
     .stMarkdown td {
         border-bottom: 1px solid #C09B5A !important;
         border-top: none !important;
@@ -79,9 +77,7 @@ st.markdown("""
         vertical-align: top !important;
         font-size: 14px !important;
     }
-    .stMarkdown tr:last-child td {
-        border-bottom: none !important;
-    }
+    .stMarkdown tr:last-child td { border-bottom: none !important; }
     .stMarkdown td:first-child {
         color: #C09B5A !important;
         font-weight: bold !important;
@@ -193,6 +189,26 @@ def start_quiz(unit=None):
     st.session_state.current_screen = "quiz"
     st.rerun()
 
+def start_saved_quiz():
+    """Generates a custom quiz using ONLY the questions the student has starred/saved in their vault."""
+    response = supabase.table("saved_questions").select("question_id, questions(*)").eq("user_id", st.session_state.user_id).execute()
+    
+    if not response.data:
+        st.toast("⭐ You haven't saved any questions yet! Complete a quiz and star hard questions to review them here.", icon="⚠️")
+        return
+        
+    questions = [item['questions'] for item in response.data if item.get('questions')]
+    random.shuffle(questions)
+    
+    st.session_state.quiz_questions = questions[:10] # Give them a mix of up to 10 saved questions
+    st.session_state.current_q_index = 0
+    st.session_state.quiz_score = 0
+    st.session_state.user_answers = []
+    st.session_state.quiz_started = True
+    st.session_state.q_start_time = time.time()
+    st.session_state.current_screen = "quiz"
+    st.rerun()
+
 def submit_answer(selected_option):
     end_time = time.time()
     time_taken = int(end_time - st.session_state.q_start_time)
@@ -204,6 +220,7 @@ def submit_answer(selected_option):
         st.session_state.quiz_score += 1
 
     st.session_state.user_answers.append({
+        'question_id': current_q['question_id'],  # Added to track which question was saved
         'question': current_q['question_text'],
         'selected': selected_option,
         'selected_text': current_q[f"option_{selected_option.lower()}"],
@@ -745,6 +762,26 @@ def unit_detail_screen():
     with st.expander("📚 View Unit Formulas & Cheat Sheets (Click to Expand)"):
         st.markdown(cheat_sheets.get(unit_num, "*Add your custom formulas for this unit here!*"), unsafe_allow_html=True)
 
+def save_to_vault(q_id):
+    """Saves a question to the student's personal vault in Supabase."""
+    try:
+        supabase.table("saved_questions").insert({
+            "user_id": st.session_state.user_id,
+            "question_id": q_id
+        }).execute()
+        st.toast("✅ Question saved to your Vault!", icon="⭐")
+    except Exception:
+        # If it hits the UNIQUE constraint, it's already saved
+        st.toast("This question is already in your Vault!", icon="⭐")
+
+def remove_from_vault(q_id):
+    """Deletes a mastered question from the student's personal vault."""
+    try:
+        supabase.table("saved_questions").delete().eq("user_id", st.session_state.user_id).eq("question_id", q_id).execute()
+        st.toast("🗑️ Question removed from your Vault!", icon="✅")
+    except Exception as e:
+        st.toast("Error removing question.", icon="❌")
+
 def quiz_screen():
     if st.session_state.current_q_index >= len(st.session_state.quiz_questions):
         st.markdown("<h2 style='text-align: center; color: #0B1B3D;'>Quiz Complete! 🎉</h2>", unsafe_allow_html=True)
@@ -761,9 +798,20 @@ def quiz_screen():
             else:
                 st.error(f"**❌ Incorrect:** You chose {ans['selected']}) {ans['selected_text']} \n\n **💡 Right Answer:** {ans['correct']}) {ans['correct_text']}")
             
-            st.write("")
+            # THE VAULT BUTTONS (Save or Remove)
+            colA, colB = st.columns(2)
+            with colA:
+                st.button("⭐ Save to Vault", key=f"save_btn_{i}_{ans['question_id']}", on_click=save_to_vault, args=(ans['question_id'],), use_container_width=True)
+            with colB:
+                st.button("🗑️ Remove from Vault", key=f"remove_btn_{i}_{ans['question_id']}", on_click=remove_from_vault, args=(ans['question_id'],), use_container_width=True)
             
-        st.write("---")
+            st.write("---")
+            
+        if st.button("Return to Dashboard", type="primary", use_container_width=True):
+            st.session_state.quiz_started = False
+            st.session_state.user_answers = [] 
+            st.session_state.current_screen = "dashboard"
+            st.rerun()
         return
 
     q = st.session_state.quiz_questions[st.session_state.current_q_index]
@@ -893,23 +941,24 @@ def analytics_screen():
 if not st.session_state.logged_in:
     login_screen()
 else:
-    # --- The New SaaS Sidebar ---
     with st.sidebar:
         st.markdown("<h2 style='text-align: center; color: white;'>🎓 Novara Profile</h2>", unsafe_allow_html=True)
         
-        # Dynamically fetch Total XP (Total Correct Answers)
         response = supabase.table("attempts").select("is_correct").eq("user_id", st.session_state.user_id).execute()
         total_score = sum([1 for item in response.data if item['is_correct'] == 1]) if response.data else 0
         
         st.markdown(f"<div style='text-align: center; color: #C09B5A; font-size: 18px; margin-bottom: 20px;'><b>👤 {st.session_state.username}</b><br>⭐ Total XP: {total_score}</div>", unsafe_allow_html=True)
         
-        # Sidebar Navigation
         if st.button("🏠 Home (Dashboard)", use_container_width=True, type="primary"):
             st.session_state.current_screen = "dashboard"
             st.rerun()
             
         if st.button("🚀 Start Full Adaptive Quiz", use_container_width=True, type="primary"):
             start_quiz()
+            
+        # THE NEW VAULT BUTTON
+        if st.button("⭐ Review Saved Questions", use_container_width=True):
+            start_saved_quiz()
             
         if st.button("📊 View Analytics", use_container_width=True, type="primary"):
             st.session_state.current_screen = "analytics"
@@ -920,7 +969,6 @@ else:
             st.session_state.clear()
             st.rerun()
 
-    # Route to the correct content screen
     if st.session_state.current_screen == "dashboard":
         dashboard_screen()
     elif st.session_state.current_screen == "unit_detail":

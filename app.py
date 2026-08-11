@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import time
+import hashlib
 import matplotlib.pyplot as plt
 from supabase import create_client, Client
 import random
@@ -217,6 +218,11 @@ def submit_answer(selected_option):
     st.rerun()
 
 # --- 5. UI Screens ---
+
+def hash_password(password):
+    """Scrambles the password into a secure hash before saving to the database"""
+    return hashlib.sha256(password.encode()).hexdigest()
+
 def login_screen():
     st.markdown("<h1 style='text-align: center; color: #0B1B3D;'>🎓 Novara Academy</h1>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>Secure Adaptive Quiz Engine</h3>", unsafe_allow_html=True)
@@ -231,8 +237,10 @@ def login_screen():
         if st.button("Log In", type="primary"):
             if login_email and login_password:
                 try:
-                    auth_response = supabase.auth.sign_in_with_password({"email": login_email, "password": login_password})
-                    user_record = supabase.table("users").select("*").eq("email", login_email).execute()
+                    # Hash the typed password to see if it matches the database
+                    hashed_pw = hash_password(login_password)
+                    user_record = supabase.table("users").select("*").eq("email", login_email).eq("password_hash", hashed_pw).execute()
+                    
                     if user_record.data:
                         user = user_record.data[0]
                         st.session_state.logged_in = True
@@ -242,22 +250,12 @@ def login_screen():
                         st.success(f"Welcome back, {user['username']}!")
                         time.sleep(1)
                         st.rerun()
+                    else:
+                        st.error("❌ Invalid email or password. Please try again.")
                 except Exception as e:
-                    st.error("❌ Invalid email or password. Please try again.")
+                    st.error(f"❌ Error during login: {e}")
             else:
                 st.warning("⚠️ Please fill in both fields.")
-                
-        # --- NEW: FORGOT PASSWORD BUTTON ---
-        st.write("") # Adds a tiny bit of spacing
-        if st.button("Forgot Password?"):
-            if login_email:
-                try:
-                    supabase.auth.reset_password_email(login_email)
-                    st.success("✅ Secure reset link sent! Please check your email inbox.")
-                except Exception as e:
-                    st.error("⚠️ Failed to send reset link. Are you sure this email is registered?")
-            else:
-                st.warning("⚠️ Please type your Email Address in the box above first, then click 'Forgot Password?'.")
 
     with tab2:
         reg_username = st.text_input("Full Name / Username", key="reg_username")
@@ -267,17 +265,23 @@ def login_screen():
         if st.button("Create Account", type="primary"):
             if reg_username and reg_email and reg_password:
                 try:
-                    auth_response = supabase.auth.sign_up({"email": reg_email, "password": reg_password})
+                    # Check if email already exists on the roster
                     check = supabase.table("users").select("*").eq("email", reg_email).execute()
                     if not check.data:
+                        # Hash the new password
+                        hashed_pw = hash_password(reg_password)
+                        
+                        # Save directly to custom users table
                         supabase.table("users").insert({
                             "username": reg_username,
                             "email": reg_email,
-                            "password_hash": "SECURED_BY_SUPABASE_AUTH" 
+                            "password_hash": hashed_pw 
                         }).execute()
-                    st.success("✅ Account created successfully! You can now Log In.")
+                        st.success("✅ Account created successfully! You can now Log In.")
+                    else:
+                        st.error("❌ Registration failed: An account with this email already exists.")
                 except Exception as e:
-                    st.error(f"❌ Registration failed: An account with this email may already exist.")
+                    st.error(f"❌ Registration failed: {e}")
             else:
                 st.warning("⚠️ Please fill in all fields.")
 
@@ -288,7 +292,6 @@ def dashboard_screen():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if st.button("↩️ Log Out", use_container_width=True, type="primary"):
-            supabase.auth.sign_out() 
             st.session_state.clear()
             st.rerun()
         st.write("")

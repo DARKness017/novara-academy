@@ -307,55 +307,100 @@ def login_screen():
 def dashboard_screen():
     st.markdown(f"<h1 style='text-align: center; color: #0B1B3D;'>Welcome, {st.session_state.username}!</h1>", unsafe_allow_html=True)
     
-    # --- ⏱️ AP EXAM COUNTDOWN & STREAK TRACKER ---
+    # --- 1. ⏱️ AP EXAM COUNTDOWN & STREAK TRACKER ---
     exam_date = date(2027, 5, 10)
     today = date.today()
     days_left = (exam_date - today).days
     
-    # Calculate Streak from Supabase 'created_at' timestamps
     streak = 0
+    unit_accuracies = {}
+    
     try:
-        response = supabase.table("attempts").select("created_at").eq("user_id", st.session_state.user_id).execute()
+        response = supabase.table("attempts").select("created_at, is_correct, questions(unit_number)").eq("user_id", st.session_state.user_id).execute()
         if response.data:
-            # Extract unique dates the user was active
+            # Daily Streak Calculation
             active_dates = set()
+            unit_stats = {}
+            
             for row in response.data:
                 if row.get("created_at"):
-                    active_dates.add(row["created_at"][:10]) # Extracts 'YYYY-MM-DD'
+                    active_dates.add(row["created_at"][:10])
+                
+                # Unit Accuracy for Trophy Case
+                if row.get("questions"):
+                    u = row["questions"]["unit_number"]
+                    if u not in unit_stats:
+                        unit_stats[u] = {"correct": 0, "total": 0}
+                    unit_stats[u]["total"] += 1
+                    unit_stats[u]["correct"] += row["is_correct"]
             
-            # Check streak counting backwards from today
+            # Streak Logic
             current_date = today
             while current_date.strftime("%Y-%m-%d") in active_dates:
                 streak += 1
                 current_date -= timedelta(days=1)
-            
-            # If streak is 0, check if they played yesterday (meaning their streak is still alive, they just haven't played TODAY yet)
             if streak == 0:
                 current_date = today - timedelta(days=1)
                 while current_date.strftime("%Y-%m-%d") in active_dates:
                     streak += 1
                     current_date -= timedelta(days=1)
+                    
+            # Compute percentage per unit
+            for u, stats in unit_stats.items():
+                if stats["total"] > 0:
+                    unit_accuracies[u] = (stats["correct"] / stats["total"]) * 100
     except Exception:
-        pass # Failsafe in case created_at column is missing
+        pass
 
-    # Render the sleek SaaS Widgets
+    # Top Metric Cards
     st.markdown(f"""
-    <div style="display: flex; justify-content: space-between; margin-bottom: 30px; margin-top: 20px;">
-        <div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-radius: 12px; padding: 20px; width: 48%; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <h4 style="color: white; margin-top: 0; margin-bottom: 10px; font-size: 16px;">⏱️ AP Calc Exam</h4>
-            <h1 style="color: #C09B5A; margin: 0; font-size: 36px;">{days_left}</h1>
-            <p style="color: white; margin: 10px 0 0 0; font-size: 14px;">Days Left (May 10)</p>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 25px; margin-top: 15px;">
+        <div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-radius: 12px; padding: 18px; width: 48%; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <h4 style="color: white; margin-top: 0; margin-bottom: 8px; font-size: 15px;">⏱️ AP Calc Exam</h4>
+            <h1 style="color: #C09B5A; margin: 0; font-size: 34px;">{days_left}</h1>
+            <p style="color: white; margin: 8px 0 0 0; font-size: 13px;">Days Left (May 10)</p>
         </div>
-        <div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-radius: 12px; padding: 20px; width: 48%; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <h4 style="color: white; margin-top: 0; margin-bottom: 10px; font-size: 16px;">🔥 Daily Streak</h4>
-            <h1 style="color: #C09B5A; margin: 0; font-size: 36px;">{streak}</h1>
-            <p style="color: white; margin: 10px 0 0 0; font-size: 14px;">Consecutive Days</p>
+        <div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-radius: 12px; padding: 18px; width: 48%; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <h4 style="color: white; margin-top: 0; margin-bottom: 8px; font-size: 15px;">🔥 Daily Streak</h4>
+            <h1 style="color: #C09B5A; margin: 0; font-size: 34px;">{streak}</h1>
+            <p style="color: white; margin: 8px 0 0 0; font-size: 13px;">Consecutive Days</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
-    st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>AP Calculus Units</h3>", unsafe_allow_html=True)
+    # --- 2. 🏆 TROPHY CASE (MASTERY BADGES) ---
+    st.markdown("<h3 style='text-align: center; color: #0B1B3D; margin-bottom: 15px;'>🏆 Unit Mastery Trophy Case</h3>", unsafe_allow_html=True)
+    
+    unit_titles = {
+        1: "Limits", 2: "Diff Basics", 3: "Composite", 4: "Context Apps", 5: "Analytical Apps",
+        6: "Integration", 7: "Diff Eq", 8: "Integration Apps", 9: "Parametric/Polar", 10: "Series"
+    }
+    
+    # Render Badges in 2 rows of 5
+    for row_start in [1, 6]:
+        cols = st.columns(5)
+        for idx, u_num in enumerate(range(row_start, row_start + 5)):
+            acc = unit_accuracies.get(u_num, 0)
+            is_mastered = acc >= 80.0
+            
+            bg_color = "#C09B5A" if is_mastered else "#0B1B3D"
+            text_color = "#0B1B3D" if is_mastered else "#A0A0A0"
+            border_style = "2px solid #C09B5A" if is_mastered else "1px solid #334155"
+            icon = "🏆" if is_mastered else "🔒"
+            
+            with cols[idx]:
+                st.markdown(f"""
+                <div style="background-color: {bg_color}; border: {border_style}; border-radius: 10px; padding: 10px 5px; text-align: center; margin-bottom: 12px;">
+                    <span style="font-size: 18px;">{icon}</span><br>
+                    <b style="color: {text_color}; font-size: 11px;">U{u_num}: {unit_titles[u_num]}</b><br>
+                    <span style="color: {text_color}; font-size: 10px;">{acc:.0f}% Acc</span>
+                </div>
+                """, unsafe_allow_html=True)
+
     st.write("---")
+    
+    # --- 3. AP CALCULUS UNITS GRID ---
+    st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>AP Calculus Units</h3>", unsafe_allow_html=True)
     
     units = [
         "Unit 1: Limits & Continuity", 

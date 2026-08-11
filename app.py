@@ -227,6 +227,7 @@ def login_screen():
     with tab1:
         login_email = st.text_input("Email Address", key="login_email")
         login_password = st.text_input("Password", type="password", key="login_password")
+        
         if st.button("Log In", type="primary"):
             if login_email and login_password:
                 try:
@@ -242,14 +243,27 @@ def login_screen():
                         time.sleep(1)
                         st.rerun()
                 except Exception as e:
-                    st.error("Invalid email or password. Please try again.")
+                    st.error("❌ Invalid email or password. Please try again.")
             else:
-                st.warning("Please fill in both fields.")
+                st.warning("⚠️ Please fill in both fields.")
+                
+        # --- NEW: FORGOT PASSWORD BUTTON ---
+        st.write("") # Adds a tiny bit of spacing
+        if st.button("Forgot Password?"):
+            if login_email:
+                try:
+                    supabase.auth.reset_password_email(login_email)
+                    st.success("✅ Secure reset link sent! Please check your email inbox.")
+                except Exception as e:
+                    st.error("⚠️ Failed to send reset link. Are you sure this email is registered?")
+            else:
+                st.warning("⚠️ Please type your Email Address in the box above first, then click 'Forgot Password?'.")
 
     with tab2:
         reg_username = st.text_input("Full Name / Username", key="reg_username")
         reg_email = st.text_input("Email Address", key="reg_email")
         reg_password = st.text_input("Password", type="password", key="reg_password")
+        
         if st.button("Create Account", type="primary"):
             if reg_username and reg_email and reg_password:
                 try:
@@ -263,9 +277,9 @@ def login_screen():
                         }).execute()
                     st.success("✅ Account created successfully! You can now Log In.")
                 except Exception as e:
-                    st.error(f"Registration failed: An account with this email may already exist.")
+                    st.error(f"❌ Registration failed: An account with this email may already exist.")
             else:
-                st.warning("Please fill in all fields.")
+                st.warning("⚠️ Please fill in all fields.")
 
 def dashboard_screen():
     st.markdown(f"<h1 style='text-align: center; color: #0B1B3D;'>Welcome, {st.session_state.username}!</h1>", unsafe_allow_html=True)

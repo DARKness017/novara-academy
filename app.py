@@ -36,10 +36,10 @@ st.markdown("""
         border: 1px solid #C09B5A !important;
         font-weight: 500;
     }
-    .stButton > button[kind="primary"]:hover {
-        background-color: #0B1B3D !important;
-        color: white !important;
-        border: 1px solid #C09B5A !important; /* <--- CHANGED THIS TO GOLD */
+    .stButton > button:hover {
+        background-color: #C09B5A !important;
+        color: #0B1B3D !important;
+        border: 1px solid #0B1B3D !important;
     }
     
     .stButton > button[kind="primary"] {
@@ -52,7 +52,7 @@ st.markdown("""
     .stButton > button[kind="primary"]:hover {
         background-color: #0B1B3D !important;
         color: white !important;
-        border: 1px solid #0B1B3D !important;
+        border: 1px solid #C09B5A !important; /* <--- CHANGED THIS TO GOLD */
     }
 
     /* --- 3. NATIVE MARKDOWN TABLE STYLING (For Perfect Math Rendering) --- */

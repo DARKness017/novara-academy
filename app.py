@@ -1106,7 +1106,10 @@ else:
             st.rerun()
             
         # --- THE HIDDEN GOD MODE TRIGGER ---
-        if st.session_state.username == "DARKness":
+        # Add any other admin usernames inside these brackets, separated by commas!
+        admin_users = ["DARKness"] 
+
+        if st.session_state.username in admin_users:
             st.write("---")
             if st.button("👁️‍🗨️ God Mode (Admin)", use_container_width=True, type="primary"):
                 st.session_state.current_screen = "admin_dashboard"

@@ -94,10 +94,31 @@ st.markdown("""
     [data-testid="stSidebar"] hr {
         border-bottom: 1px solid #C09B5A !important;
     }
+
+    /* --- 5. PREMIUM QUIZ OPTION CARDS --- */
+    div[role="radiogroup"] {
+        gap: 15px !important; /* Increases the gap between options */
+    }
+    div[role="radiogroup"] > label {
+        background-color: #FFFFFF !important;
+        border: 2px solid #E2E8F0 !important; /* Subtle slate border by default */
+        border-radius: 12px !important;
+        padding: 15px 20px !important; /* Thick, clickable card padding */
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+        transition: all 0.2s ease-in-out !important;
+        cursor: pointer !important;
+    }
+    div[role="radiogroup"] > label:hover {
+        border: 2px solid #C09B5A !important; /* Champagne Gold border on hover */
+        background-color: #F8FAFC !important; /* Very slight highlight */
+        transform: translateY(-3px) !important; /* Lifts off the page */
+        box-shadow: 0 8px 12px rgba(0,0,0,0.1) !important; /* Deeper shadow on hover */
+    }
     </style>
 """, unsafe_allow_html=True)
 
 # --- 2. Cloud Database Connection (Supabase) ---
+@st.cache_resource
 def init_connection():
     url = st.secrets["SUPABASE_URL"]
     key = st.secrets["SUPABASE_KEY"]
@@ -879,7 +900,8 @@ def unit_detail_screen():
 """,
     }
     
-    st.markdown(cheat_sheets.get(unit_num, "*Add your custom formulas for this unit here!*"), unsafe_allow_html=True)
+    with st.expander("📚 View Unit Formulas & Cheat Sheets (Click to Expand)"):
+        st.markdown(cheat_sheets.get(unit_num, "*Add your custom formulas for this unit here!*"), unsafe_allow_html=True)
 
 def quiz_screen():
     # --- POST-QUIZ REVIEW SCREEN ---
@@ -1021,7 +1043,7 @@ def analytics_screen():
         st.rerun()
 
 def admin_dashboard_screen():
-    st.markdown("<h1 style='text-align: center; color: #0B1B3D;'>👁️‍🗨️ God Mode: Admin Dashboard</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #0B1B3D;'>👑 God Mode: Admin Dashboard</h1>", unsafe_allow_html=True)
     st.write("---")
 
     users_res = supabase.table("users").select("user_id, username").execute()
@@ -1091,14 +1113,14 @@ else:
         
         st.markdown(f"<div style='text-align: center; color: #C09B5A; font-size: 18px; margin-bottom: 20px;'><b>👤 {st.session_state.username}</b><br>⭐ Total XP: {total_score}</div>", unsafe_allow_html=True)
         
-        if st.button("🏠 Home (Dashboard)", use_container_width=True, type="primary"):
+        if st.button("🏠 Home", use_container_width=True, type="primary"):
             st.session_state.current_screen = "dashboard"
             st.rerun()
             
         if st.button("🚀 Start Full Adaptive Quiz", use_container_width=True, type="primary"):
             start_quiz()
             
-        if st.button("⭐ Review Saved Questions", use_container_width=True, type="primary"):
+        if st.button("⭐ Saved Questions", use_container_width=True, type="primary"):
             start_saved_quiz()
             
         if st.button("📊 View Analytics", use_container_width=True, type="primary"):
@@ -1111,7 +1133,7 @@ else:
 
         if st.session_state.username in admin_users:
             st.write("---")
-            if st.button("👁️‍🗨️ God Mode (Admin)", use_container_width=True, type="primary"):
+            if st.button("👑 Admin", use_container_width=True, type="primary"):
                 st.session_state.current_screen = "admin_dashboard"
                 st.rerun()
             

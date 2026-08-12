@@ -340,10 +340,7 @@ def login_screen():
         if st.button("Create Account", type="primary"):
             if reg_username and reg_email and reg_password:
                 try:
-                    # 1. Check if email already exists
                     email_check = supabase.table("users").select("*").eq("email", reg_email).execute()
-                    
-                    # 2. Check if username already exists
                     username_check = supabase.table("users").select("*").eq("username", reg_username).execute()
                     
                     if email_check.data:
@@ -957,7 +954,7 @@ def quiz_screen():
     elapsed = int(time.time() - st.session_state.q_start_time)
     components.html(
         f"""
-        <div style="font-family: sans-serif; text-align: right; color: #0B1B3D; font-size: 18px; font-weight: bold; margin-top: -30px;">
+        <div style="font-family: sans-serif; text-align: right; color: #0B1B3D; font-size: 18px; font-weight: bold; margin: 0; padding-right: 10px;">
             ⏱️ Time Elapsed: <span id="clock"></span>
         </div>
         <script>
@@ -978,7 +975,7 @@ def quiz_screen():
             }}, 1000);
         </script>
         """,
-        height=30
+        height=40
     )
     
     st.markdown(f"### {q['question_text']}")

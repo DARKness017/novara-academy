@@ -54,7 +54,7 @@ st.markdown("""
     .stButton > button[kind="primary"]:hover {
         background-color: #0B1B3D !important;
         color: white !important;
-        border: 1px solid #C09B5A !important; /* <--- YOUR GOLD HOVER FIX */
+        border: 1px solid #C09B5A !important; 
     }
 
     /* --- 3. NATIVE MARKDOWN TABLE STYLING --- */
@@ -97,22 +97,22 @@ st.markdown("""
 
     /* --- 5. PREMIUM QUIZ OPTION CARDS --- */
     div[role="radiogroup"] {
-        gap: 15px !important; /* Increases the gap between options */
+        gap: 15px !important; 
     }
     div[role="radiogroup"] > label {
         background-color: #FFFFFF !important;
-        border: 2px solid #E2E8F0 !important; /* Subtle slate border by default */
+        border: 2px solid #E2E8F0 !important; 
         border-radius: 12px !important;
-        padding: 15px 20px !important; /* Thick, clickable card padding */
+        padding: 15px 20px !important; 
         box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
         transition: all 0.2s ease-in-out !important;
         cursor: pointer !important;
     }
     div[role="radiogroup"] > label:hover {
-        border: 2px solid #C09B5A !important; /* Champagne Gold border on hover */
-        background-color: #F8FAFC !important; /* Very slight highlight */
-        transform: translateY(-3px) !important; /* Lifts off the page */
-        box-shadow: 0 8px 12px rgba(0,0,0,0.1) !important; /* Deeper shadow on hover */
+        border: 2px solid #C09B5A !important; 
+        background-color: #F8FAFC !important; 
+        transform: translateY(-3px) !important; 
+        box-shadow: 0 8px 12px rgba(0,0,0,0.1) !important; 
     }
     </style>
 """, unsafe_allow_html=True)
@@ -163,15 +163,19 @@ def start_quiz(unit=None):
         all_questions_response = supabase.table("questions").select("*").execute()
         all_questions = all_questions_response.data
         
-        attempts_response = supabase.table("attempts").select("is_correct, questions(unit_number)").eq("user_id", st.session_state.user_id).execute()
+        attempts_response = supabase.table("attempts").select("is_correct, question_id").eq("user_id", st.session_state.user_id).execute()
         attempts = attempts_response.data
+        
+        # Safely map unit numbers without crashing
+        q_map = {q['question_id']: q['unit_number'] for q in all_questions} if all_questions else {}
         
         weak_units = []
         if attempts:
             unit_stats = {}
             for a in attempts:
-                if a.get('questions'):
-                    u = a['questions']['unit_number']
+                q_id = a.get('question_id')
+                if q_id in q_map:
+                    u = q_map[q_id]
                     if u not in unit_stats:
                         unit_stats[u] = {'correct': 0, 'total': 0}
                     unit_stats[u]['total'] += 1
@@ -214,16 +218,22 @@ def start_quiz(unit=None):
 
 def start_saved_quiz():
     """Generates a custom quiz using ONLY the questions the student has starred/saved in their vault."""
-    response = supabase.table("saved_questions").select("question_id, questions(*)").eq("user_id", st.session_state.user_id).execute()
+    saved_res = supabase.table("saved_questions").select("question_id").eq("user_id", st.session_state.user_id).execute()
     
-    if not response.data:
+    if not saved_res.data:
         st.toast("⭐ You haven't saved any questions yet! Complete a quiz and star hard questions to review them here.", icon="⚠️")
         return
         
-    questions = [item['questions'] for item in response.data if item.get('questions')]
+    saved_q_ids = [item['question_id'] for item in saved_res.data]
+    q_res = supabase.table("questions").select("*").in_("question_id", saved_q_ids).execute()
+    questions = q_res.data if q_res.data else []
+    
+    if not questions:
+        return
+        
     random.shuffle(questions)
     
-    st.session_state.quiz_questions = questions[:10] # Give them a mix of up to 10 saved questions
+    st.session_state.quiz_questions = questions[:10] 
     st.session_state.current_q_index = 0
     st.session_state.quiz_score = 0
     st.session_state.user_answers = []
@@ -365,9 +375,13 @@ def dashboard_screen():
     unit_accuracies = {}
     
     try:
-        response = supabase.table("attempts").select("created_at, is_correct, questions(unit_number)").eq("user_id", st.session_state.user_id).execute()
+        response = supabase.table("attempts").select("created_at, is_correct, question_id").eq("user_id", st.session_state.user_id).execute()
+        
+        # New safe fetch for questions mapping
+        q_res = supabase.table("questions").select("question_id, unit_number").execute()
+        q_map = {q['question_id']: q['unit_number'] for q in q_res.data} if q_res.data else {}
+
         if response.data:
-            # Daily Streak Calculation
             active_dates = set()
             unit_stats = {}
             
@@ -375,9 +389,10 @@ def dashboard_screen():
                 if row.get("created_at"):
                     active_dates.add(row["created_at"][:10])
                 
-                # Unit Accuracy for Trophy Case
-                if row.get("questions"):
-                    u = row["questions"]["unit_number"]
+                # Bulletproof unit mapping
+                q_id = row.get("question_id")
+                if q_id in q_map:
+                    u = q_map[q_id]
                     if u not in unit_stats:
                         unit_stats[u] = {"correct": 0, "total": 0}
                     unit_stats[u]["total"] += 1
@@ -425,7 +440,6 @@ def dashboard_screen():
         6: "Integration", 7: "Diff Eq", 8: "Integration Apps", 9: "Parametric/Polar", 10: "Series"
     }
     
-    # Render Badges in 2 rows of 5
     for row_start in [1, 6]:
         cols = st.columns(5)
         for idx, u_num in enumerate(range(row_start, row_start + 5)):
@@ -542,7 +556,6 @@ def unit_detail_screen():
         
     st.write("---")
     
-    # 2. Formula Cheat Sheet for this Unit
     cheat_sheets = {
         1: r"""
 <div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-bottom: none; border-top-left-radius: 12px; border-top-right-radius: 12px; padding: 15px; text-align: center; color: #C09B5A;">
@@ -912,30 +925,26 @@ def quiz_screen():
         
         st.markdown("<h3 style='color: #0B1B3D;'>Question Review</h3>", unsafe_allow_html=True)
         
-        # Loop through the saved answers and display the glowing boxes
         for i, ans in enumerate(st.session_state.user_answers):
             st.markdown(f"**Q{i+1}:** {ans['question']}")
             
             if ans['is_correct']:
-                # Native Green Success Box
                 st.success(f"**✅ Correct:** {ans['selected']}) {ans['selected_text']}")
             else:
-                # Native Red Glowing Error Box showing what they clicked vs the right answer
                 st.error(f"**❌ Incorrect:** You chose {ans['selected']}) {ans['selected_text']} \n\n **💡 Right Answer:** {ans['correct']}) {ans['correct_text']}")
             
-            # THE VAULT BUTTONS (Save or Remove)
             colA, colB = st.columns(2)
             with colA:
                 st.button("⭐ Save to Vault", key=f"save_btn_{i}_{ans['question_id']}", on_click=save_to_vault, args=(ans['question_id'],), use_container_width=True)
             with colB:
                 st.button("🗑️ Remove from Vault", key=f"remove_btn_{i}_{ans['question_id']}", on_click=remove_from_vault, args=(ans['question_id'],), use_container_width=True)
             
-            st.write("") # Add a little spacing between questions
+            st.write("") 
             
         st.write("---")
         if st.button("Return to Dashboard", type="primary", use_container_width=True):
             st.session_state.quiz_started = False
-            st.session_state.user_answers = [] # Clear memory for next quiz
+            st.session_state.user_answers = [] 
             st.session_state.current_screen = "dashboard"
             st.rerun()
         return
@@ -945,11 +954,10 @@ def quiz_screen():
     st.progress((st.session_state.current_q_index) / len(st.session_state.quiz_questions))
     st.markdown(f"**Question {st.session_state.current_q_index + 1} of {len(st.session_state.quiz_questions)}** (Unit {q['unit_number']} - {q['difficulty']})")
     
-    # --- ⏱️ FIXED LIVE TICKING TIMER ---
     elapsed = int(time.time() - st.session_state.q_start_time)
     components.html(
         f"""
-        <div style="font-family: sans-serif; text-align: right; color: #0B1B3D; font-size: 18px; font-weight: bold; margin: 0; padding-right: 10px;">
+        <div style="font-family: sans-serif; text-align: right; color: #0B1B3D; font-size: 18px; font-weight: bold; margin-top: -30px;">
             ⏱️ Time Elapsed: <span id="clock"></span>
         </div>
         <script>
@@ -970,12 +978,11 @@ def quiz_screen():
             }}, 1000);
         </script>
         """,
-        height=40
+        height=30
     )
     
     st.markdown(f"### {q['question_text']}")
     
-    # --- 📈 GRAPH / IMAGE RENDERER ---
     if q.get('image_url'):
         st.image(q['image_url'], use_container_width=True)
     
@@ -995,16 +1002,20 @@ def quiz_screen():
 def analytics_screen():
     st.markdown("<h1 style='text-align: center; color: #0B1B3D;'>📊 Performance Analytics</h1>", unsafe_allow_html=True)
     
-    response = supabase.table("attempts").select("is_correct, time_taken_seconds, questions(unit_number)").eq("user_id", st.session_state.user_id).execute()
+    response = supabase.table("attempts").select("is_correct, time_taken_seconds, question_id").eq("user_id", st.session_state.user_id).execute()
     data = response.data
     
+    q_res = supabase.table("questions").select("question_id, unit_number").execute()
+    q_map = {q['question_id']: q['unit_number'] for q in q_res.data} if q_res.data else {}
+
     if data:
         processed = []
         slow_units = set() 
         
         for item in data:
-            if item.get('questions'):
-                unit_num = item['questions']['unit_number']
+            q_id = item.get('question_id')
+            if q_id in q_map:
+                unit_num = q_map[q_id]
                 processed.append({"unit": f"Unit {unit_num}", "correct": item['is_correct']})
                 
                 if item['is_correct'] == 1 and item['time_taken_seconds'] > 90:
@@ -1047,7 +1058,11 @@ def admin_dashboard_screen():
     users_res = supabase.table("users").select("user_id, username").execute()
     users = {u['user_id']: u['username'] for u in users_res.data}
 
-    attempts_res = supabase.table("attempts").select("user_id, is_correct, questions(unit_number)").execute()
+    # Bulletproof query that doesn't rely on Supabase linking
+    attempts_res = supabase.table("attempts").select("user_id, is_correct, question_id").execute()
+    
+    q_res = supabase.table("questions").select("question_id, unit_number").execute()
+    q_map = {q['question_id']: q['unit_number'] for q in q_res.data} if q_res.data else {}
     
     student_stats = []
     for uid, uname in users.items():
@@ -1058,8 +1073,9 @@ def admin_dashboard_screen():
         
         unit_acc = {}
         for a in u_attempts:
-            if a.get('questions'):
-                unit = a['questions']['unit_number']
+            q_id = a.get('question_id')
+            if q_id in q_map:
+                unit = q_map[q_id]
                 if unit not in unit_acc:
                     unit_acc[unit] = {'correct': 0, 'total': 0}
                 unit_acc[unit]['total'] += 1
@@ -1125,8 +1141,6 @@ else:
             st.session_state.current_screen = "analytics"
             st.rerun()
             
-        # --- THE HIDDEN GOD MODE TRIGGER ---
-        # Add any other admin usernames inside these brackets, separated by commas!
         admin_users = ["DARKness"] 
 
         if st.session_state.username in admin_users:

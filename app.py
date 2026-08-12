@@ -246,6 +246,26 @@ def submit_answer(selected_option):
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
+def save_to_vault(q_id):
+    """Saves a question to the student's personal vault in Supabase."""
+    try:
+        supabase.table("saved_questions").insert({
+            "user_id": st.session_state.user_id,
+            "question_id": q_id
+        }).execute()
+        st.toast("✅ Question saved to your Vault!", icon="⭐")
+    except Exception:
+        # If it hits the UNIQUE constraint, it's already saved
+        st.toast("This question is already in your Vault!", icon="⭐")
+
+def remove_from_vault(q_id):
+    """Deletes a mastered question from the student's personal vault."""
+    try:
+        supabase.table("saved_questions").delete().eq("user_id", st.session_state.user_id).eq("question_id", q_id).execute()
+        st.toast("🗑️ Question removed from your Vault!", icon="✅")
+    except Exception as e:
+        st.toast("Error removing question.", icon="❌")
+
 # --- 5. UI Screens ---
 
 def login_screen():
@@ -289,8 +309,17 @@ def login_screen():
         if st.button("Create Account", type="primary"):
             if reg_username and reg_email and reg_password:
                 try:
-                    check = supabase.table("users").select("*").eq("email", reg_email).execute()
-                    if not check.data:
+                    # 1. Check if email already exists
+                    email_check = supabase.table("users").select("*").eq("email", reg_email).execute()
+                    
+                    # 2. Check if username already exists
+                    username_check = supabase.table("users").select("*").eq("username", reg_username).execute()
+                    
+                    if email_check.data:
+                        st.error("❌ Registration failed: An account with this email already exists.")
+                    elif username_check.data:
+                        st.error("❌ Registration failed: That username is already taken. Please choose another one.")
+                    else:
                         hashed_pw = hash_password(reg_password)
                         supabase.table("users").insert({
                             "username": reg_username,
@@ -298,8 +327,6 @@ def login_screen():
                             "password_hash": hashed_pw 
                         }).execute()
                         st.success("✅ Account created successfully! You can now Log In.")
-                    else:
-                        st.error("❌ Registration failed: An account with this email already exists.")
                 except Exception as e:
                     st.error(f"❌ Registration failed: {e}")
             else:
@@ -852,32 +879,10 @@ def unit_detail_screen():
 """,
     }
     
-    st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>2. AP Calculus Formula Cheat Sheets</h3>", unsafe_allow_html=True)
-    
-    with st.expander("📚 View Unit Formulas & Cheat Sheets (Click to Expand)"):
-        st.markdown(cheat_sheets.get(unit_num, "*Add your custom formulas for this unit here!*"), unsafe_allow_html=True)
-
-def save_to_vault(q_id):
-    """Saves a question to the student's personal vault in Supabase."""
-    try:
-        supabase.table("saved_questions").insert({
-            "user_id": st.session_state.user_id,
-            "question_id": q_id
-        }).execute()
-        st.toast("✅ Question saved to your Vault!", icon="⭐")
-    except Exception:
-        # If it hits the UNIQUE constraint, it's already saved
-        st.toast("This question is already in your Vault!", icon="⭐")
-
-def remove_from_vault(q_id):
-    """Deletes a mastered question from the student's personal vault."""
-    try:
-        supabase.table("saved_questions").delete().eq("user_id", st.session_state.user_id).eq("question_id", q_id).execute()
-        st.toast("🗑️ Question removed from your Vault!", icon="✅")
-    except Exception as e:
-        st.toast("Error removing question.", icon="❌")
+    st.markdown(cheat_sheets.get(unit_num, "*Add your custom formulas for this unit here!*"), unsafe_allow_html=True)
 
 def quiz_screen():
+    # --- POST-QUIZ REVIEW SCREEN ---
     if st.session_state.current_q_index >= len(st.session_state.quiz_questions):
         st.markdown("<h2 style='text-align: center; color: #0B1B3D;'>Quiz Complete! 🎉</h2>", unsafe_allow_html=True)
         st.markdown(f"<h3 style='text-align: center; color: #C09B5A;'>Your Score: {st.session_state.quiz_score} / {len(st.session_state.quiz_questions)}</h3>", unsafe_allow_html=True)
@@ -885,12 +890,15 @@ def quiz_screen():
         
         st.markdown("<h3 style='color: #0B1B3D;'>Question Review</h3>", unsafe_allow_html=True)
         
+        # Loop through the saved answers and display the glowing boxes
         for i, ans in enumerate(st.session_state.user_answers):
             st.markdown(f"**Q{i+1}:** {ans['question']}")
             
             if ans['is_correct']:
+                # Native Green Success Box
                 st.success(f"**✅ Correct:** {ans['selected']}) {ans['selected_text']}")
             else:
+                # Native Red Glowing Error Box showing what they clicked vs the right answer
                 st.error(f"**❌ Incorrect:** You chose {ans['selected']}) {ans['selected_text']} \n\n **💡 Right Answer:** {ans['correct']}) {ans['correct_text']}")
             
             # THE VAULT BUTTONS (Save or Remove)
@@ -900,11 +908,12 @@ def quiz_screen():
             with colB:
                 st.button("🗑️ Remove from Vault", key=f"remove_btn_{i}_{ans['question_id']}", on_click=remove_from_vault, args=(ans['question_id'],), use_container_width=True)
             
-            st.write("---")
+            st.write("") # Add a little spacing between questions
             
+        st.write("---")
         if st.button("Return to Dashboard", type="primary", use_container_width=True):
             st.session_state.quiz_started = False
-            st.session_state.user_answers = [] 
+            st.session_state.user_answers = [] # Clear memory for next quiz
             st.session_state.current_screen = "dashboard"
             st.rerun()
         return
@@ -946,7 +955,7 @@ def quiz_screen():
     
     st.markdown(f"### {q['question_text']}")
     
-    # --- 📈 NEW: GRAPH / IMAGE RENDERER ---
+    # --- 📈 GRAPH / IMAGE RENDERER ---
     if q.get('image_url'):
         st.image(q['image_url'], use_container_width=True)
     
@@ -964,108 +973,111 @@ def quiz_screen():
             submit_answer(choice_label)
 
 def analytics_screen():
-    st.markdown("<h1 style='text-align: center; color: #0B1B3D;'>📊 Advanced Analytics Dashboard</h1>", unsafe_allow_html=True)
-    st.write("---")
-    
-    st.markdown("""
-        <style>
-        div[data-testid="metric-container"] {
-            background-color: #FFFFFF;
-            border: 2px solid #C09B5A;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        div[data-testid="metric-container"] label {
-            color: #0B1B3D !important;
-            font-weight: bold;
-            font-size: 16px;
-        }
-        div[data-testid="metric-container"] div {
-            color: #0B1B3D !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #0B1B3D;'>📊 Performance Analytics</h1>", unsafe_allow_html=True)
     
     response = supabase.table("attempts").select("is_correct, time_taken_seconds, questions(unit_number)").eq("user_id", st.session_state.user_id).execute()
     data = response.data
     
     if data:
-        df = pd.DataFrame(data)
-        df['unit_number'] = df['questions'].apply(lambda x: x['unit_number'] if x else None)
+        processed = []
+        slow_units = set() 
         
-        total_q = len(df)
-        accuracy = (df['is_correct'].sum() / total_q) * 100
-        avg_speed = df['time_taken_seconds'].mean()
-        
-        unit_acc = df.groupby('unit_number')['is_correct'].mean() * 100
-        mastered_units = (unit_acc >= 60).sum()
-        
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric(label="Questions Answered", value=f"{total_q}")
-        with col2:
-            st.metric(label="All-Time Accuracy", value=f"{accuracy:.1f}%")
-        with col3:
-            st.metric(label="Average Speed", value=f"{avg_speed:.1f}s")
-        with col4:
-            st.metric(label="Units Mastered", value=f"{mastered_units}/10")
-            
-        st.write("---")
-
-        st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>📈 Accuracy Trend Over Time</h3>", unsafe_allow_html=True)
-        
-        df['Cumulative Accuracy'] = df['is_correct'].expanding().mean() * 100
-        
-        fig_line, ax_line = plt.subplots(figsize=(8, 3))
-        ax_line.plot(df.index + 1, df['Cumulative Accuracy'], color='#C09B5A', linewidth=2.5, marker='o', markersize=4)
-        ax_line.set_ylabel('Accuracy (%)', color='#0B1B3D', fontweight='bold')
-        ax_line.set_xlabel('Total Questions Answered', color='#0B1B3D', fontweight='bold')
-        ax_line.set_ylim(0, 105)
-        ax_line.axhline(60, color='red', linestyle=':', label='60% Threshold', alpha=0.5)
-        
-        ax_line.spines['top'].set_visible(False)
-        ax_line.spines['right'].set_visible(False)
-        ax_line.spines['bottom'].set_color('#0B1B3D')
-        ax_line.spines['left'].set_color('#0B1B3D')
-        ax_line.tick_params(colors='#0B1B3D')
-        
-        st.pyplot(fig_line)
-        st.write("---")
-
-        st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>📊 Unit Performance Breakdown</h3>", unsafe_allow_html=True)
-        
-        fig_bar, ax_bar = plt.subplots(figsize=(8, 4))
-        unit_acc.plot(kind='bar', ax=ax_bar, color='#0B1B3D', edgecolor='#C09B5A', width=0.7)
-        
-        ax_bar.set_ylabel('Accuracy (%)', color='#0B1B3D', fontweight='bold')
-        ax_bar.set_xlabel('Unit Number', color='#0B1B3D', fontweight='bold')
-        ax_bar.set_ylim(0, 105)
-        ax_bar.axhline(60, color='#C09B5A', linestyle='--', label='60% Threshold')
-        ax_bar.legend()
-        
-        ax_bar.spines['top'].set_visible(False)
-        ax_bar.spines['right'].set_visible(False)
-        ax_bar.spines['bottom'].set_color('#0B1B3D')
-        ax_bar.spines['left'].set_color('#0B1B3D')
-        ax_bar.tick_params(colors='#0B1B3D')
-        plt.xticks(rotation=0)
-        
-        st.pyplot(fig_bar)
-        
-        slow_units = set()
         for item in data:
-            if item['is_correct'] == 1 and item['time_taken_seconds'] > 90:
-                if item.get('questions'):
-                    slow_units.add(item['questions']['unit_number'])
-                    
-        if slow_units:
-            sorted_slow = sorted(list(slow_units))
-            st.warning(f"⏱️ **Speed Improvement Needed:** You have correct answers that took longer than 90 seconds in **Units: {', '.join(map(str, sorted_slow))}**. The AP exam requires faster pacing here!")
+            if item.get('questions'):
+                unit_num = item['questions']['unit_number']
+                processed.append({"unit": f"Unit {unit_num}", "correct": item['is_correct']})
+                
+                if item['is_correct'] == 1 and item['time_taken_seconds'] > 90:
+                    slow_units.add(unit_num)
+        
+        if processed:
+            df = pd.DataFrame(processed)
+            summary = df.groupby('unit')['correct'].mean() * 100
             
+            fig, ax = plt.subplots(figsize=(8, 4))
+            summary.plot(kind='bar', ax=ax, color='#0B1B3D', edgecolor='#C09B5A', width=0.7)
+            
+            ax.set_ylabel('Accuracy (%)')
+            ax.set_ylim(0, 100)
+            ax.axhline(60, color='#C09B5A', linestyle='--', label='60% Threshold')
+            ax.legend()
+            
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            plt.xticks(rotation=0)
+            
+            st.pyplot(fig)
+            
+            if slow_units:
+                sorted_slow = sorted(list(slow_units))
+                st.warning(f"⏱️ **Speed Improvement Needed:** You have correct answers that took longer than 90 seconds in **Units: {', '.join(map(str, sorted_slow))}**. The AP exam requires faster pacing here!")
+        else:
+            st.info("No unit data found for your attempts.")
     else:
         st.info("You haven't taken any quizzes yet! Start a quiz to see your analytics.")
+        
+    if st.button("← Back to Dashboard", type="primary"):
+        st.session_state.current_screen = "dashboard"
+        st.rerun()
+
+def admin_dashboard_screen():
+    st.markdown("<h1 style='text-align: center; color: #0B1B3D;'>👁️‍🗨️ God Mode: Admin Dashboard</h1>", unsafe_allow_html=True)
+    st.write("---")
+
+    users_res = supabase.table("users").select("user_id, username").execute()
+    users = {u['user_id']: u['username'] for u in users_res.data}
+
+    attempts_res = supabase.table("attempts").select("user_id, is_correct, questions(unit_number)").execute()
+    
+    student_stats = []
+    for uid, uname in users.items():
+        u_attempts = [a for a in attempts_res.data if a['user_id'] == uid]
+        total_xp = sum(1 for a in u_attempts if a['is_correct'])
+        total_q = len(u_attempts)
+        accuracy = (total_xp / total_q * 100) if total_q > 0 else 0
+        
+        unit_acc = {}
+        for a in u_attempts:
+            if a.get('questions'):
+                unit = a['questions']['unit_number']
+                if unit not in unit_acc:
+                    unit_acc[unit] = {'correct': 0, 'total': 0}
+                unit_acc[unit]['total'] += 1
+                unit_acc[unit]['correct'] += a['is_correct']
+        
+        weakest_unit = "None"
+        lowest_acc = 100
+        for u, stats in unit_acc.items():
+            acc = (stats['correct'] / stats['total']) * 100
+            if acc < lowest_acc:
+                lowest_acc = acc
+                weakest_unit = f"Unit {u}"
+        
+        student_stats.append({
+            "Username": uname,
+            "Total XP": total_xp,
+            "Questions Answered": total_q,
+            "Accuracy": f"{accuracy:.1f}%",
+            "Weakest Unit": weakest_unit if total_q > 0 else "N/A"
+        })
+    
+    st.markdown("### 🌍 Global Platform Metrics")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Total Students", len(users))
+    c2.metric("Total Questions Answered", len(attempts_res.data))
+    global_acc = (sum(1 for a in attempts_res.data if a['is_correct']) / len(attempts_res.data) * 100) if attempts_res.data else 0
+    c3.metric("Global Average Accuracy", f"{global_acc:.1f}%")
+    
+    st.write("---")
+    st.markdown("### 📋 Student Roster & Leaderboard")
+    
+    df = pd.DataFrame(student_stats)
+    if not df.empty:
+        df = df.sort_values(by="Total XP", ascending=False).reset_index(drop=True)
+        df.index += 1 
+        st.dataframe(df, use_container_width=True)
+    else:
+        st.info("No student data available yet.")
 
 # --- 6. Screen Router & SaaS Sidebar ---
 if not st.session_state.logged_in:
@@ -1079,7 +1091,6 @@ else:
         
         st.markdown(f"<div style='text-align: center; color: #C09B5A; font-size: 18px; margin-bottom: 20px;'><b>👤 {st.session_state.username}</b><br>⭐ Total XP: {total_score}</div>", unsafe_allow_html=True)
         
-        # --- THE MISSING HOME BUTTON ---
         if st.button("🏠 Home (Dashboard)", use_container_width=True, type="primary"):
             st.session_state.current_screen = "dashboard"
             st.rerun()
@@ -1087,13 +1098,19 @@ else:
         if st.button("🚀 Start Full Adaptive Quiz", use_container_width=True, type="primary"):
             start_quiz()
             
-        # THE NEW VAULT BUTTON
         if st.button("⭐ Review Saved Questions", use_container_width=True, type="primary"):
             start_saved_quiz()
             
         if st.button("📊 View Analytics", use_container_width=True, type="primary"):
             st.session_state.current_screen = "analytics"
             st.rerun()
+            
+        # --- THE HIDDEN GOD MODE TRIGGER ---
+        if st.session_state.username == "DARKness":
+            st.write("---")
+            if st.button("👁️‍🗨️ God Mode (Admin)", use_container_width=True, type="primary"):
+                st.session_state.current_screen = "admin_dashboard"
+                st.rerun()
             
         st.write("---")
         if st.button("↩️ Log Out", use_container_width=True, type="primary"):
@@ -1108,3 +1125,5 @@ else:
         quiz_screen()
     elif st.session_state.current_screen == "analytics":
         analytics_screen()
+    elif st.session_state.current_screen == "admin_dashboard":
+        admin_dashboard_screen()

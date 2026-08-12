@@ -946,6 +946,10 @@ def quiz_screen():
     
     st.markdown(f"### {q['question_text']}")
     
+    # --- 📈 NEW: GRAPH / IMAGE RENDERER ---
+    if q.get('image_url'):
+        st.image(q['image_url'], use_container_width=True)
+    
     options = {
         "A": q['option_a'],
         "B": q['option_b'],

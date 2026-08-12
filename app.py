@@ -945,11 +945,11 @@ def quiz_screen():
     st.progress((st.session_state.current_q_index) / len(st.session_state.quiz_questions))
     st.markdown(f"**Question {st.session_state.current_q_index + 1} of {len(st.session_state.quiz_questions)}** (Unit {q['unit_number']} - {q['difficulty']})")
     
-    # --- ⏱️ THE LIVE TICKING TIMER ---
+    # --- ⏱️ FIXED LIVE TICKING TIMER ---
     elapsed = int(time.time() - st.session_state.q_start_time)
     components.html(
         f"""
-        <div style="font-family: sans-serif; text-align: right; color: #0B1B3D; font-size: 18px; font-weight: bold; margin-top: -30px;">
+        <div style="font-family: sans-serif; text-align: right; color: #0B1B3D; font-size: 18px; font-weight: bold; margin: 0; padding-right: 10px;">
             ⏱️ Time Elapsed: <span id="clock"></span>
         </div>
         <script>
@@ -960,11 +960,9 @@ def quiz_screen():
                 let minutes = Math.floor(time_elapsed / 60);
                 let seconds = time_elapsed % 60;
                 
-                // Format with leading zeros
                 let formatted_time = (minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
                 clock_div.innerText = formatted_time;
                 
-                // Turn red if it passes the 90-second AP Exam threshold
                 if (time_elapsed > 90) {{
                     clock_div.style.color = "#FF4B4B";
                 }}
@@ -972,7 +970,7 @@ def quiz_screen():
             }}, 1000);
         </script>
         """,
-        height=30
+        height=40
     )
     
     st.markdown(f"### {q['question_text']}")

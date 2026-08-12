@@ -2,3 +2,4 @@ streamlit
 pandas
 supabase
 matplotlib
+bcrypt==4.0.1

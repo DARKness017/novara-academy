@@ -1027,14 +1027,17 @@ def analytics_screen():
             q_id = item.get('question_id')
             if q_id in q_map:
                 unit_num = q_map[q_id]
-                processed.append({"unit": f"Unit {unit_num}", "correct": item['is_correct']})
+                processed.append({"unit_num": unit_num, "correct": item['is_correct']})
                 
                 if item['is_correct'] == 1 and item['time_taken_seconds'] > 90:
                     slow_units.add(unit_num)
         
         if processed:
             df = pd.DataFrame(processed)
-            summary = df.groupby('unit')['correct'].mean() * 100
+            # Group by the raw number so it sorts mathematically (1, 2, 3... 10)
+            summary = df.groupby('unit_num')['correct'].mean() * 100
+            # Add the word "Unit" back in for the chart labels
+            summary.index = [f"Unit {i}" for i in summary.index]
             
             fig, ax = plt.subplots(figsize=(8, 4))
             summary.plot(kind='bar', ax=ax, color='#0B1B3D', edgecolor='#C09B5A', width=0.7)

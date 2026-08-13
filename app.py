@@ -941,6 +941,10 @@ def quiz_screen():
         
         st.markdown("<h3 style='color: #0B1B3D;'>Question Review</h3>", unsafe_allow_html=True)
         
+        # --- 1. QUICKLY FETCH THE STUDENT'S VAULT FIRST ---
+        vault_response = supabase.table("saved_questions").select("question_id").eq("user_id", st.session_state.user_id).execute()
+        saved_q_ids = [item['question_id'] for item in vault_response.data] if vault_response.data else []
+        
         for i, ans in enumerate(st.session_state.user_answers):
             st.markdown(f"**Q{i+1}:** {ans['question']}")
             
@@ -949,13 +953,15 @@ def quiz_screen():
             else:
                 st.error(f"**❌ Incorrect:** You chose {ans['selected']}) {ans['selected_text']} \n\n **💡 Right Answer:** {ans['correct']}) {ans['correct_text']}")
             
-            colA, colB = st.columns(2)
-            with colA:
-                st.button("⭐ Save to Vault", key=f"save_btn_{i}_{ans['question_id']}", on_click=save_to_vault, args=(ans['question_id'],), use_container_width=True)
-            with colB:
-                st.button("🗑️ Remove from Vault", key=f"remove_btn_{i}_{ans['question_id']}", on_click=remove_from_vault, args=(ans['question_id'],), use_container_width=True)
+            # --- 2. DYNAMICALLY SHOW ONLY ONE BUTTON ---
+            if ans['question_id'] in saved_q_ids:
+                # If it's already in the vault, ONLY show the Remove button
+                st.button("🗑️ Remove from Vault", key=f"remove_btn_{i}_{ans['question_id']}", on_click=remove_from_vault, args=(ans['question_id'],))
+            else:
+                # If it's not in the vault, ONLY show the Save button
+                st.button("⭐ Save to Vault", key=f"save_btn_{i}_{ans['question_id']}", on_click=save_to_vault, args=(ans['question_id'],))
             
-            st.write("") 
+            st.write("---")
             
         st.write("---")
         if st.button("Return to Dashboard", type="primary", use_container_width=True):

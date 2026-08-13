@@ -746,19 +746,20 @@ def dashboard_screen():
     unit_accuracies = {}
     
     try:
-        response = supabase.table("attempts").select("created_at, is_correct, question_id").eq("user_id", st.session_state.user_id).execute()
-        
+        # Fetch question mapping and user attempts using the correct 'timestamp' column name
         q_map = get_question_map()
-
+        response = supabase.table("attempts").select("timestamp, is_correct, question_id").eq("user_id", st.session_state.user_id).execute()
+        
         if response.data:
             active_dates = set()
             unit_stats = {}
             
             for row in response.data:
-                if row.get("created_at"):
-                    active_dates.add(row["created_at"][:10])
+                # 1. Track Daily Streak Dates
+                if row.get("timestamp"):
+                    active_dates.add(str(row["timestamp"])[:10])
                 
-                # Bulletproof unit mapping
+                # 2. Track Unit Accuracies via Question Map
                 q_id = row.get("question_id")
                 if q_id in q_map:
                     u = q_map[q_id]
@@ -767,7 +768,7 @@ def dashboard_screen():
                     unit_stats[u]["total"] += 1
                     unit_stats[u]["correct"] += row["is_correct"]
             
-            # Streak Logic
+            # Streak Calculation Logic
             current_date = today
             while current_date.strftime("%Y-%m-%d") in active_dates:
                 streak += 1
@@ -778,7 +779,7 @@ def dashboard_screen():
                     streak += 1
                     current_date -= timedelta(days=1)
                     
-            # Compute percentage per unit
+            # Compute Percentage per Unit for Trophies
             for u, stats in unit_stats.items():
                 if stats["total"] > 0:
                     unit_accuracies[u] = (stats["correct"] / stats["total"]) * 100
@@ -818,7 +819,8 @@ def dashboard_screen():
             bg_color = "#C09B5A" if is_mastered else "#0B1B3D"
             text_color = "#0B1B3D" if is_mastered else "#A0A0A0"
             border_style = "2px solid #C09B5A" if is_mastered else "1px solid #334155"
-            icon = "🏆" if is_mastered else "🔒"
+            # &#127942; is the HTML code for Trophy, &#128274; is the Lock
+            icon = "&#127942;" if is_mastered else "&#128274;"
             
             with cols[idx]:
                 st.markdown(f"""

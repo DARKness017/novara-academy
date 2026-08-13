@@ -819,13 +819,15 @@ def dashboard_screen():
             bg_color = "#C09B5A" if is_mastered else "#0B1B3D"
             text_color = "#0B1B3D" if is_mastered else "#A0A0A0"
             border_style = "2px solid #C09B5A" if is_mastered else "1px solid #334155"
-            # &#127942; is the HTML code for Trophy, &#128274; is the Lock
-            icon = "&#127942;" if is_mastered else "&#128274;"
+            
+            # Using Hex codes and forcing a color fallback so the lock can't camouflage
+            icon = "&#x1F3C6;" if is_mastered else "&#x1F512;"
+            icon_color = "#0B1B3D" if is_mastered else "#A0A0A0"
             
             with cols[idx]:
                 st.markdown(f"""
                 <div style="background-color: {bg_color}; border: {border_style}; border-radius: 10px; padding: 10px 5px; text-align: center; margin-bottom: 12px;">
-                    <span style="font-size: 18px;">{icon}</span><br>
+                    <span style="font-size: 18px; color: {icon_color};">{icon}</span><br>
                     <b style="color: {text_color}; font-size: 11px;">U{u_num}: {unit_titles[u_num]}</b><br>
                     <span style="color: {text_color}; font-size: 10px;">{acc:.0f}% Acc</span>
                 </div>

@@ -737,37 +737,33 @@ def dashboard_screen():
     st.markdown(f"<h1 style='text-align: center; color: #0B1B3D;'>Welcome, {st.session_state.username}!</h1>", unsafe_allow_html=True)
     
     # --- 1. ⏱️ AP EXAM COUNTDOWN & STREAK TRACKER ---
-    # Set the exact time of the AP Calc Exam (May 10, 2027 at 8:00 AM)
+    # Calculate total seconds left in Python to pass to JavaScript
     exam_datetime = datetime(2027, 5, 10, 8, 0, 0) 
     now = datetime.now()
-    time_left = exam_datetime - now
-    
-    # Calculate exact days, hours, minutes, and seconds
-    days_left = time_left.days
-    hours_left, remainder = divmod(time_left.seconds, 3600)
-    minutes_left, seconds_left = divmod(remainder, 60)
-    
-    # Format the string to look sleek: e.g., "300d 14h 45m 12s"
-    countdown_str = f"{days_left}d {hours_left}h {minutes_left}m {seconds_left}s"
+    total_seconds = int((exam_datetime - now).total_seconds())
     
     today = date.today()
     streak = 0
     unit_accuracies = {}
     
     try:
-        response = supabase.table("attempts").select("created_at, is_correct, questions(unit_number)").eq("user_id", st.session_state.user_id).execute()
+        # 🚨 FIX 1: Restored q_map and changed "created_at" back to "timestamp"
+        q_map = get_question_map()
+        response = supabase.table("attempts").select("timestamp, is_correct, question_id").eq("user_id", st.session_state.user_id).execute()
+        
         if response.data:
-            # Daily Streak Calculation
             active_dates = set()
             unit_stats = {}
             
             for row in response.data:
-                if row.get("created_at"):
-                    active_dates.add(row["created_at"][:10])
+                # Daily Streak Calculation
+                if row.get("timestamp"):
+                    active_dates.add(str(row["timestamp"])[:10])
                 
                 # Unit Accuracy for Trophy Case
-                if row.get("questions"):
-                    u = row["questions"]["unit_number"]
+                q_id = row.get("question_id")
+                if q_id in q_map:
+                    u = q_map[q_id]
                     if u not in unit_stats:
                         unit_stats[u] = {"correct": 0, "total": 0}
                     unit_stats[u]["total"] += 1
@@ -791,21 +787,47 @@ def dashboard_screen():
     except Exception:
         pass
 
-    # Top Metric Cards
-    st.markdown(f"""
-    <div style="display: flex; justify-content: space-between; margin-bottom: 25px; margin-top: 15px;">
-        <div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-radius: 12px; padding: 18px; width: 48%; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    # --- 🚨 FIX 2: Live JavaScript Countdown Widget ---
+    components.html(
+    f"""
+    <div style="display: flex; justify-content: space-between; font-family: sans-serif; margin-bottom: 5px; margin-top: 15px;">
+        <div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-radius: 12px; padding: 18px; width: 48%; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); box-sizing: border-box;">
             <h4 style="color: white; margin-top: 0; margin-bottom: 8px; font-size: 15px;">⏱️ AP Calc Exam</h4>
-            <h1 style="color: #C09B5A; margin: 0; font-size: 24px;">{countdown_str}</h1>
+            <h1 id="countdown" style="color: #C09B5A; margin: 0; font-size: 24px;"></h1>
             <p style="color: white; margin: 8px 0 0 0; font-size: 13px;">Time Left (May 10)</p>
         </div>
-        <div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-radius: 12px; padding: 18px; width: 48%; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-radius: 12px; padding: 18px; width: 48%; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); box-sizing: border-box;">
             <h4 style="color: white; margin-top: 0; margin-bottom: 8px; font-size: 15px;">🔥 Daily Streak</h4>
             <h1 style="color: #C09B5A; margin: 0; font-size: 34px;">{streak}</h1>
             <p style="color: white; margin: 8px 0 0 0; font-size: 13px;">Consecutive Days</p>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    <script>
+        let total_seconds = {total_seconds};
+        const countdown_div = document.getElementById("countdown");
+
+        function updateTimer() {{
+            let d = Math.floor(total_seconds / (3600*24));
+            let h = Math.floor((total_seconds % (3600*24)) / 3600);
+            let m = Math.floor((total_seconds % 3600) / 60);
+            let s = Math.floor(total_seconds % 60);
+            
+            // Format to keep double digits for a clean look
+            let formatted_time = d + "d " + 
+                                (h < 10 ? "0" : "") + h + "h " + 
+                                (m < 10 ? "0" : "") + m + "m " + 
+                                (s < 10 ? "0" : "") + s + "s";
+                                
+            countdown_div.innerText = formatted_time;
+            total_seconds--;
+        }}
+        
+        updateTimer(); // Run instantly so it doesn't blink empty
+        setInterval(updateTimer, 1000);
+    </script>
+    """,
+    height=140
+    )
     
     # --- 2. 🏆 TROPHY CASE (MASTERY BADGES) ---
     st.markdown("<h3 style='text-align: center; color: #0B1B3D; margin-bottom: 15px;'>🏆 Unit Mastery Trophy Case</h3>", unsafe_allow_html=True)
@@ -825,7 +847,6 @@ def dashboard_screen():
             text_color = "#0B1B3D" if is_mastered else "#A0A0A0"
             border_style = "2px solid #C09B5A" if is_mastered else "1px solid #334155"
             
-            # Using Hex codes and forcing a color fallback so the lock can't camouflage
             icon = "&#x1F3C6;" if is_mastered else "&#x1F512;"
             icon_color = "#0B1B3D" if is_mastered else "#A0A0A0"
             

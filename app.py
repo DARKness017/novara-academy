@@ -826,7 +826,7 @@ def dashboard_screen():
         setInterval(updateTimer, 1000);
     </script>
     """,
-    height=140
+    height=170
     )
     
     # --- 2. 🏆 TROPHY CASE (MASTERY BADGES) ---

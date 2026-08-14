@@ -5,7 +5,7 @@ import bcrypt
 import matplotlib.pyplot as plt
 from supabase import create_client
 import random
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 import streamlit.components.v1 as components
 
 # --- 1. Page Config & Theming ---
@@ -737,38 +737,43 @@ def dashboard_screen():
     st.markdown(f"<h1 style='text-align: center; color: #0B1B3D;'>Welcome, {st.session_state.username}!</h1>", unsafe_allow_html=True)
     
     # --- 1. ⏱️ AP EXAM COUNTDOWN & STREAK TRACKER ---
-    exam_date = date(2027, 5, 10)
-    today = date.today()
-    # Ensure days left stops at 0 instead of going negative
-    days_left = max(0, (exam_date - today).days)
+    # Set the exact time of the AP Calc Exam (May 10, 2027 at 8:00 AM)
+    exam_datetime = datetime(2027, 5, 10, 8, 0, 0) 
+    now = datetime.now()
+    time_left = exam_datetime - now
     
+    # Calculate exact days, hours, minutes, and seconds
+    days_left = time_left.days
+    hours_left, remainder = divmod(time_left.seconds, 3600)
+    minutes_left, seconds_left = divmod(remainder, 60)
+    
+    # Format the string to look sleek: e.g., "300d 14h 45m 12s"
+    countdown_str = f"{days_left}d {hours_left}h {minutes_left}m {seconds_left}s"
+    
+    today = date.today()
     streak = 0
     unit_accuracies = {}
     
     try:
-        # Fetch question mapping and user attempts using the correct 'timestamp' column name
-        q_map = get_question_map()
-        response = supabase.table("attempts").select("timestamp, is_correct, question_id").eq("user_id", st.session_state.user_id).execute()
-        
+        response = supabase.table("attempts").select("created_at, is_correct, questions(unit_number)").eq("user_id", st.session_state.user_id).execute()
         if response.data:
+            # Daily Streak Calculation
             active_dates = set()
             unit_stats = {}
             
             for row in response.data:
-                # 1. Track Daily Streak Dates
-                if row.get("timestamp"):
-                    active_dates.add(str(row["timestamp"])[:10])
+                if row.get("created_at"):
+                    active_dates.add(row["created_at"][:10])
                 
-                # 2. Track Unit Accuracies via Question Map
-                q_id = row.get("question_id")
-                if q_id in q_map:
-                    u = q_map[q_id]
+                # Unit Accuracy for Trophy Case
+                if row.get("questions"):
+                    u = row["questions"]["unit_number"]
                     if u not in unit_stats:
                         unit_stats[u] = {"correct": 0, "total": 0}
                     unit_stats[u]["total"] += 1
                     unit_stats[u]["correct"] += row["is_correct"]
             
-            # Streak Calculation Logic
+            # Streak Logic
             current_date = today
             while current_date.strftime("%Y-%m-%d") in active_dates:
                 streak += 1
@@ -779,7 +784,7 @@ def dashboard_screen():
                     streak += 1
                     current_date -= timedelta(days=1)
                     
-            # Compute Percentage per Unit for Trophies
+            # Compute percentage per unit
             for u, stats in unit_stats.items():
                 if stats["total"] > 0:
                     unit_accuracies[u] = (stats["correct"] / stats["total"]) * 100
@@ -791,8 +796,8 @@ def dashboard_screen():
     <div style="display: flex; justify-content: space-between; margin-bottom: 25px; margin-top: 15px;">
         <div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-radius: 12px; padding: 18px; width: 48%; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <h4 style="color: white; margin-top: 0; margin-bottom: 8px; font-size: 15px;">⏱️ AP Calc Exam</h4>
-            <h1 style="color: #C09B5A; margin: 0; font-size: 34px;">{days_left}</h1>
-            <p style="color: white; margin: 8px 0 0 0; font-size: 13px;">Days Left (May 10)</p>
+            <h1 style="color: #C09B5A; margin: 0; font-size: 24px;">{countdown_str}</h1>
+            <p style="color: white; margin: 8px 0 0 0; font-size: 13px;">Time Left (May 10)</p>
         </div>
         <div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-radius: 12px; padding: 18px; width: 48%; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <h4 style="color: white; margin-top: 0; margin-bottom: 8px; font-size: 15px;">🔥 Daily Streak</h4>

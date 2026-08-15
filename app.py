@@ -892,7 +892,7 @@ def dashboard_screen():
                 st.session_state.current_screen = "unit_detail"
                 st.rerun()
 
-    # --- MINIMALIST SOCIAL MEDIA FOOTER ---
+    # --- MINIMALIST SOCIAL MEDIA & LEGAL FOOTER ---
     st.write("---")
     st.markdown("""
     <style>
@@ -912,7 +912,22 @@ def dashboard_screen():
         justify-content: center;
         align-items: center;
         margin-top: 15px;
+        margin-bottom: 15px;
+    }
+    .legal-footer {
+        text-align: center;
+        color: #A0A0A0;
+        font-size: 12px;
+        font-family: sans-serif;
         padding-bottom: 30px;
+        line-height: 1.5;
+    }
+    .legal-footer a {
+        color: #C09B5A;
+        text-decoration: none;
+    }
+    .legal-footer a:hover {
+        text-decoration: underline;
     }
     </style>
     
@@ -920,12 +935,18 @@ def dashboard_screen():
         <a href='https://t.me/Novara_Academy' target='_blank'>
             <img class="social-icon" src='https://cdn.simpleicons.org/telegram/0B1B3D' alt='Telegram'/>
         </a>
-        <a href='https://www.instagram.com/thenovaraacademy?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==' target='_blank'>
+        <a href='https://www.instagram.com/thenovaraacademy' target='_blank'>
             <img class="social-icon" src='https://cdn.simpleicons.org/instagram/0B1B3D' alt='Instagram'/>
         </a>
-        <a href='https://youtube.com/@thenovara_academy?si=-30csHCXkzrwEVO0' target='_blank'>
+        <a href='https://youtube.com/@thenovara_academy' target='_blank'>
             <img class="social-icon" src='https://cdn.simpleicons.org/youtube/0B1B3D' alt='YouTube'/>
         </a>
+    </div>
+    
+    <div class="legal-footer">
+        &copy; 2026 Novara Academy. All rights reserved.<br>
+        Designed & Engineered in Uzbekistan.<br>
+        <span style="font-size: 10px; opacity: 0.7;">For educational purposes only. Not affiliated with the College Board.</span>
     </div>
     """, unsafe_allow_html=True)
 

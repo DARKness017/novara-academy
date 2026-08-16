@@ -7,6 +7,7 @@ from supabase import create_client
 import random
 from datetime import date, timedelta, datetime
 import streamlit.components.v1 as components
+import re
 
 # --- 1. Page Config & Theming ---
 st.set_page_config(page_title="Novara Academy - Adaptive Engine", page_icon="🎓", layout="centered")
@@ -709,27 +710,36 @@ def login_screen():
         
         if st.button("Create Account", type="primary"):
             if reg_username and reg_email and reg_password:
-                try:
-                    email_check = supabase.table("users").select("*").eq("email", reg_email).execute()
-                    username_check = supabase.table("users").select("*").eq("username", reg_username).execute()
-                    
-                    if email_check.data:
-                        st.error("❌ Registration failed: An account with this email already exists.")
-                    elif username_check.data:
-                        st.error("❌ Registration failed: That username is already taken. Please choose another one.")
-                    else:
-                        # Securely hash the password using bcrypt
-                        salt = bcrypt.gensalt()
-                        hashed_pw = bcrypt.hashpw(reg_password.encode('utf-8'), salt).decode('utf-8')
+                
+                # --- NEW: STRICT REGEX EMAIL FORMAT VALIDATION ---
+                email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+                if not re.match(email_pattern, reg_email):
+                    st.warning("⚠️ Please enter a valid email address format (e.g., student@example.com).")
+                else:
+                    try:
+                        # 1. Check if email already exists
+                        email_check = supabase.table("users").select("*").eq("email", reg_email).execute()
                         
-                        supabase.table("users").insert({
-                            "username": reg_username,
-                            "email": reg_email,
-                            "password_hash": hashed_pw 
-                        }).execute()
-                        st.success("✅ Account created successfully! You can now Log In.")
-                except Exception as e:
-                    st.error(f"❌ Registration failed: {e}")
+                        # 2. Check if username already exists
+                        username_check = supabase.table("users").select("*").eq("username", reg_username).execute()
+                        
+                        if email_check.data:
+                            st.error("❌ Registration failed: An account with this email already exists.")
+                        elif username_check.data:
+                            st.error("❌ Registration failed: That username is already taken. Please choose another one.")
+                        else:
+                            # Securely hash the password using bcrypt
+                            salt = bcrypt.gensalt()
+                            hashed_pw = bcrypt.hashpw(reg_password.encode('utf-8'), salt).decode('utf-8')
+                            
+                            supabase.table("users").insert({
+                                "username": reg_username,
+                                "email": reg_email,
+                                "password_hash": hashed_pw 
+                            }).execute()
+                            st.success("✅ Account created successfully! You can now Log In.")
+                    except Exception as e:
+                        st.error(f"❌ Registration failed: {e}")
             else:
                 st.warning("⚠️ Please fill in all fields.")
 
@@ -1123,7 +1133,7 @@ def analytics_screen():
         st.rerun()
 
 def admin_dashboard_screen():
-    st.markdown("<h1 style='text-align: center; color: #0B1B3D;'>👑 God Mode: Admin Dashboard</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #0B1B3D;'>👑  Platform Administration</h1>", unsafe_allow_html=True)
     st.write("---")
 
     users_res = supabase.table("users").select("user_id, username").execute()

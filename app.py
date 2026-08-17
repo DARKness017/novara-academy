@@ -532,6 +532,11 @@ def start_quiz(unit=None):
     if unit:
         response = supabase.table("questions").select("*").eq("unit_number", unit).execute()
         questions = response.data
+        
+        # ADD THESE TWO LINES TO SHUFFLE THE UNIT QUESTIONS!
+        if questions:
+            random.shuffle(questions)
+            
     else:
         all_questions_response = supabase.table("questions").select("*").execute()
         all_questions = all_questions_response.data

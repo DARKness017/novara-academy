@@ -522,6 +522,10 @@ if 'selected_unit_name' not in st.session_state:
     st.session_state.selected_unit_name = ""
 if 'user_answers' not in st.session_state:
     st.session_state.user_answers = []
+if 'failed_attempts' not in st.session_state:
+    st.session_state.failed_attempts = 0
+if 'lockout_until' not in st.session_state:
+    st.session_state.lockout_until = 0
 
 # --- 4. Core Application Logic ---
 def start_quiz(unit=None):
@@ -679,7 +683,12 @@ def login_screen():
         login_password = st.text_input("Password", type="password", key="login_password")
         
         if st.button("Log In", type="primary"):
-            if login_email and login_password:
+            # 1. Check if the user is currently locked out
+            if time.time() < st.session_state.lockout_until:
+                remaining_seconds = int(st.session_state.lockout_until - time.time())
+                st.error(f"🔒 Account temporarily locked due to too many failed attempts. Try again in {remaining_seconds} seconds.")
+            
+            elif login_email and login_password:
                 try:
                     user_record = supabase.table("users").select("*").eq("email", login_email).execute()
                     
@@ -687,6 +696,10 @@ def login_screen():
                         user = user_record.data[0]
                         # Verify the bcrypt password securely
                         if bcrypt.checkpw(login_password.encode('utf-8'), user['password_hash'].encode('utf-8')):
+                            # SUCCESS: Reset the strikeout counters!
+                            st.session_state.failed_attempts = 0
+                            st.session_state.lockout_until = 0
+                            
                             st.session_state.logged_in = True
                             st.session_state.user_id = user['user_id']
                             st.session_state.username = user['username']
@@ -696,9 +709,23 @@ def login_screen():
                             time.sleep(1)
                             st.rerun()
                         else:
-                            st.error("❌ Invalid email or password. Please try again.")
+                            # FAILED PASSWORD
+                            st.session_state.failed_attempts += 1
+                            if st.session_state.failed_attempts >= 5:
+                                st.session_state.lockout_until = time.time() + 300 # 5 minute lockout
+                                st.error("🔒 Too many failed attempts. You are locked out for 5 minutes.")
+                            else:
+                                attempts_left = 5 - st.session_state.failed_attempts
+                                st.error(f"❌ Invalid email or password. ({attempts_left} attempts remaining)")
                     else:
-                        st.error("❌ Invalid email or password. Please try again.")
+                        # FAILED EMAIL (We treat it as a failed attempt to avoid giving hackers clues)
+                        st.session_state.failed_attempts += 1
+                        if st.session_state.failed_attempts >= 5:
+                            st.session_state.lockout_until = time.time() + 300
+                            st.error("🔒 Too many failed attempts. You are locked out for 5 minutes.")
+                        else:
+                            attempts_left = 5 - st.session_state.failed_attempts
+                            st.error(f"❌ Invalid email or password. ({attempts_left} attempts remaining)")
                 except Exception as e:
                     st.error(f"❌ Error during login: {e}")
             else:

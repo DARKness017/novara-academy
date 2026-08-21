@@ -429,12 +429,18 @@ if 'hide_guide' not in st.session_state:
     st.session_state.hide_guide = False
 
 # --- 4. Core Application Logic ---
-def start_quiz(unit=None):
+def start_quiz(unit=None, selected_subtopic="All Subtopics"):
     if unit:
-        response = supabase.table("questions").select("*").eq("unit_number", unit).execute()
+        # Build the dynamic query
+        query = supabase.table("questions").select("*").eq("unit_number", unit)
+        
+        # If the student selected a specific subtopic, apply the filter!
+        if selected_subtopic != "All Subtopics":
+            query = query.eq("subtopic", selected_subtopic)
+            
+        response = query.execute()
         questions = response.data
         
-        # ADD THESE TWO LINES TO SHUFFLE THE UNIT QUESTIONS!
         if questions:
             random.shuffle(questions)
             
@@ -1246,7 +1252,23 @@ def unit_detail_screen():
     st.markdown(f"<h1 style='text-align: center; color: #0B1B3D;'>{unit_name}</h1>", unsafe_allow_html=True)
     st.write("---")
     
-    st.markdown("<h3 style='text-align: center; color: #0B1B3D;'><i class='fa-solid fa-sliders' style='color: #C09B5A;'></i> Select Difficulty Level</h3>", unsafe_allow_html=True)
+    # --- 🆕 DYNAMIC SUBTOPIC SELECTOR ---
+    st.markdown("<h3 style='text-align: center; color: #0B1B3D;'><i class='fa-solid fa-layer-group' style='color: #C09B5A;'></i> Select Subtopic</h3>", unsafe_allow_html=True)
+    
+    # Fetch all unique subtopics for this specific unit from the database
+    res = supabase.table("questions").select("subtopic").eq("unit_number", unit_num).execute()
+    
+    subtopic_options = ["All Subtopics"]
+    if res.data:
+        # Extract unique valid subtopics (ignoring empty/None values)
+        fetched_subs = sorted(list(set([q['subtopic'] for q in res.data if q.get('subtopic')])))
+        subtopic_options.extend(fetched_subs)
+    
+    # Render the sleek dropdown
+    selected_subtopic = st.selectbox("Focus on a specific skill:", subtopic_options, label_visibility="collapsed")
+    st.write("---")
+    
+    st.markdown("<h3 style='text-align: center; color: #0B1B3D;'><i class='fa-solid fa-sliders' style='color: #C09B5A;'></i> Select Difficulty Level</h3>", unsafe_allow_html=True)    
     diff_col1, diff_col2, diff_col3, diff_col4 = st.columns(4)
     with diff_col1:
         if st.button("All", use_container_width=True): st.session_state.difficulty = "All"
@@ -1260,8 +1282,12 @@ def unit_detail_screen():
     st.info(f"**Current Setting:** Quizzes for this unit will pull **{st.session_state.difficulty}** questions.")
 
     st.write("")
-    if st.button(f"Start Quiz for {unit_name}", type="primary", use_container_width=True):
-        start_quiz(unit=unit_num)
+    
+    # Change the button text dynamically based on what they selected
+    btn_text = f"Start Quiz: {selected_subtopic}" if selected_subtopic != "All Subtopics" else f"Start Full Unit Quiz"
+    
+    if st.button(btn_text, type="primary", use_container_width=True):
+        start_quiz(unit=unit_num, selected_subtopic=selected_subtopic)
         
     st.write("---")
     

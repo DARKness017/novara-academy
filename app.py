@@ -791,7 +791,7 @@ def vault_screen():
             st.write("---")
             correct_letter = q['correct_option']
             correct_text = q[f"option_{correct_letter.lower()}"]
-            st.success(f"**✅ Correct Answer:** {correct_letter}) {correct_text}")
+            st.markdown(f"<div style='background-color: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; padding: 14px; border-radius: 8px; color: #22c55e; margin-bottom: 15px;'><b>✅ Correct Answer:</b> {correct_letter}) {correct_text}</div>", unsafe_allow_html=True)
             
             if st.button("Remove from Vault", type="primary"):
                 supabase.table("saved_questions").delete().eq("user_id", st.session_state.user_id).eq("question_id", q['question_id']).execute()
@@ -1150,15 +1150,13 @@ def dashboard_screen():
             # Display Tabs
             tab_month, tab_alltime = st.tabs(["This Month", "All-Time"])
             with tab_month:
-                if not monthly_xp.empty:
-                    st.dataframe(monthly_xp, use_container_width=True)
-                else:
-                    st.info("No points earned yet this month! Be the first on the board.")
+                st.markdown("<h4 style='color: #0B1B3D; margin-top: 5px;'><i class='fa-solid fa-calendar-days' style='color: #C09B5A;'></i> This Month's Scholars</h4>", unsafe_allow_html=True)
+                if not monthly_xp.empty: st.dataframe(monthly_xp, use_container_width=True)
+                else: st.markdown("<div style='background-color: rgba(192, 155, 90, 0.1); border: 1px solid #C09B5A; padding: 12px; border-radius: 8px; color: #C09B5A;'><i class='fa-solid fa-circle-info'></i> No points earned yet this month! Be the first on the board.</div>", unsafe_allow_html=True)
             with tab_alltime:
-                if not alltime_xp.empty:
-                    st.dataframe(alltime_xp, use_container_width=True)
-                else:
-                    st.info("No points earned yet.")
+                st.markdown("<h4 style='color: #0B1B3D; margin-top: 5px;'><i class='fa-solid fa-trophy' style='color: #C09B5A;'></i> All-Time Hall of Fame</h4>", unsafe_allow_html=True)
+                if not alltime_xp.empty: st.dataframe(alltime_xp, use_container_width=True)
+                else: st.markdown("<div style='background-color: rgba(192, 155, 90, 0.1); border: 1px solid #C09B5A; padding: 12px; border-radius: 8px; color: #C09B5A;'><i class='fa-solid fa-circle-info'></i> No points earned yet.</div>", unsafe_allow_html=True)
 
     # --- MINIMALIST SOCIAL MEDIA & LEGAL FOOTER ---
     st.write("---")
@@ -1228,13 +1226,13 @@ def unit_detail_screen():
     st.markdown("<h3 style='text-align: center; color: #0B1B3D;'><i class='fa-solid fa-sliders' style='color: #C09B5A;'></i> Select Difficulty Level</h3>", unsafe_allow_html=True)
     diff_col1, diff_col2, diff_col3, diff_col4 = st.columns(4)
     with diff_col1:
-        if st.button("🌐 All", use_container_width=True): st.session_state.difficulty = "All"
+        if st.button("All", use_container_width=True): st.session_state.difficulty = "All"
     with diff_col2:
-        if st.button("🟢 Easy", use_container_width=True): st.session_state.difficulty = "Easy"
+        if st.button("Easy", use_container_width=True): st.session_state.difficulty = "Easy"
     with diff_col3:
-        if st.button("🟡 Medium", use_container_width=True): st.session_state.difficulty = "Medium"
+        if st.button("Medium", use_container_width=True): st.session_state.difficulty = "Medium"
     with diff_col4:
-        if st.button("🔴 Hard", use_container_width=True): st.session_state.difficulty = "Hard"
+        if st.button("Hard", use_container_width=True): st.session_state.difficulty = "Hard"
         
     st.info(f"**Current Setting:** Quizzes for this unit will pull **{st.session_state.difficulty}** questions.")
 
@@ -1244,7 +1242,7 @@ def unit_detail_screen():
         
     st.write("---")
     
-    with st.expander("📚 View Unit Formulas & Cheat Sheets (Click to Expand)"):
+    with st.expander("View Unit Formulas & Cheat Sheets (Click to Expand)"):
         st.markdown(CHEAT_SHEETS.get(unit_num, "*Add your custom formulas for this unit here!*"), unsafe_allow_html=True)
 
 def quiz_screen():
@@ -1264,9 +1262,9 @@ def quiz_screen():
             st.markdown(f"**Q{i+1}:** {ans['question']}")
             
             if ans['is_correct']:
-                st.success(f"**✅ Correct:** {ans['selected']}) {ans['selected_text']}")
+                st.markdown(f"<div style='background-color: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; padding: 14px; border-radius: 8px; color: #22c55e; margin-bottom: 12px;'><b>✅ Correct:</b> {ans['selected']}) {ans['selected_text']}</div>", unsafe_allow_html=True)
             else:
-                st.error(f"**❌ Incorrect:** You chose {ans['selected']}) {ans['selected_text']} \n\n **💡 Right Answer:** {ans['correct']}) {ans['correct_text']}")
+                st.markdown(f"<div style='background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 12px;'><b>❌ Incorrect:</b> You chose {ans['selected']}) {ans['selected_text']}<br><br><i class='fa-solid fa-lightbulb' style='color: #eab308;'></i> <b style='color: #eab308;'>Right Answer:</b> <span style='color: #eab308;'>{ans['correct']}) {ans['correct_text']}</span></div>", unsafe_allow_html=True)
             
             # --- 2. DYNAMICALLY SHOW ONLY ONE BUTTON ---
             if ans['question_id'] in saved_q_ids:

@@ -991,40 +991,75 @@ def dashboard_screen():
     # --- 2. Dynamic Gamification Gamestate Logic ---
     streak = 31  # 🛑 TEMPORARY TEST: Change this number to test UI, then delete this line later!
     
+    # --- 2. Dynamic Gamification Gamestate Logic ---
+    # streak = 31  # <-- ONLY uncomment this to forcefully test the fire UI!
+    
     if streak == 0:
         flame_color = "#64748B" # Slate Gray
-        flame_glow = "none"
+        glow_str = "none"
         streak_msg = "Start your streak!"
         pulse_class = ""
-    elif 1 <= streak <= 2:
+        card_class = ""
+    elif 1 <= streak <= 7:
         flame_color = "#FBBF24" # Yellow
-        flame_glow = "drop-shadow(0px 0px 4px rgba(251, 191, 36, 0.4))"
+        glow_str = "0px 0px 6px rgba(251, 191, 36, 0.4)"
         streak_msg = "Heating Up!"
         pulse_class = ""
-    elif 3 <= streak <= 6:
+        card_class = ""
+    elif 8 <= streak <= 30:
         flame_color = "#F97316" # Orange
-        flame_glow = "drop-shadow(0px 0px 8px rgba(249, 115, 22, 0.6))"
+        glow_str = "0px 0px 10px rgba(249, 115, 22, 0.6)"
         streak_msg = "On Fire!"
         pulse_class = ""
+        card_class = ""
     else:
         flame_color = "#EF4444" # Blazing Red
-        flame_glow = "drop-shadow(0px 0px 12px rgba(239, 68, 68, 0.8))"
+        glow_str = "0px 0px 14px rgba(239, 68, 68, 0.8)"
         streak_msg = "Unstoppable!"
-        pulse_class = "flame-pulse"
+        pulse_class = "flame-flicker"
+        card_class = "fire-border"
 
     # --- 3. Live JavaScript Countdown Widget & Dynamic Streak ---
+    # --- 3. Live JavaScript Countdown Widget & Dynamic Gamification ---
     components.html(
     f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @keyframes pulse-glow {{
-            0% {{ filter: drop-shadow(0px 0px 8px rgba(239, 68, 68, 0.6)); transform: scale(1); }}
-            50% {{ filter: drop-shadow(0px 0px 16px rgba(239, 68, 68, 1)); transform: scale(1.05); }}
-            100% {{ filter: drop-shadow(0px 0px 8px rgba(239, 68, 68, 0.6)); transform: scale(1); }}
+        /* The Hyper-Realistic Flicker Animation */
+        @keyframes fire-flicker {{
+            0%, 100% {{ 
+                text-shadow: 0 0 10px #ef4444, 0 0 20px #ef4444, 0 0 30px #f97316; 
+                transform: scale(1) translateY(0px) rotate(-3deg); 
+                color: #ef4444; 
+            }}
+            25% {{ 
+                text-shadow: 0 0 12px #f97316, 0 0 22px #f97316, 0 0 32px #fbbf24; 
+                transform: scale(1.1) translateY(-2px) rotate(3deg); 
+                color: #fbbf24; 
+            }}
+            50% {{ 
+                text-shadow: 0 0 8px #ef4444, 0 0 18px #f97316, 0 0 28px #ef4444; 
+                transform: scale(0.95) translateY(1px) rotate(-1deg); 
+                color: #f97316; 
+            }}
+            75% {{ 
+                text-shadow: 0 0 14px #ef4444, 0 0 24px #fbbf24, 0 0 34px #f97316; 
+                transform: scale(1.05) translateY(-1px) rotate(2deg); 
+                color: #ef4444; 
+            }}
         }}
-        .flame-pulse {{
-            animation: pulse-glow 1.5s infinite alternate;
+        .flame-flicker {{
+            animation: fire-flicker 0.4s infinite alternate !important;
             display: inline-block;
+            filter: none !important; /* Overrides inline static shadow so animation handles it */
+        }}
+        /* The Card Border Energy Pulse */
+        @keyframes border-glow {{
+            0% {{ box-shadow: 0 10px 20px rgba(0,0,0,0.15), 0 0 10px rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.5); }}
+            100% {{ box-shadow: 0 10px 20px rgba(0,0,0,0.15), 0 0 25px rgba(239,68,68,0.8); border-color: rgba(239,68,68,1); }}
+        }}
+        .fire-border {{
+            animation: border-glow 1s infinite alternate !important;
         }}
     </style>
     
@@ -1037,11 +1072,11 @@ def dashboard_screen():
         </div>
         
         <!-- Dynamic Gamified Streak Card -->
-        <div style="background: linear-gradient(135deg, #0B1B3D 0%, #152A55 100%); border: 1px solid {flame_color}; border-radius: 16px; padding: 22px; width: 48%; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.15); box-sizing: border-box; transition: transform 0.3s ease;">
+        <div class="{card_class}" style="background: linear-gradient(135deg, #0B1B3D 0%, #152A55 100%); border: 1px solid {flame_color}; border-radius: 16px; padding: 22px; width: 48%; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.15); box-sizing: border-box; transition: transform 0.3s ease;">
             <h4 style="color: #E2E8F0; margin-top: 0; margin-bottom: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">
-                <i class="fa-solid fa-fire {pulse_class}" style="color: {flame_color}; margin-right: 5px; filter: {flame_glow}; transition: 0.3s;"></i> Daily Streak
+                <i class="fa-solid fa-fire {pulse_class}" style="color: {flame_color}; margin-right: 5px; filter: drop-shadow({glow_str}); transition: 0.3s;"></i> Daily Streak
             </h4>
-            <h1 style="color: {flame_color}; margin: 0; font-size: 36px; font-weight: 800; text-shadow: {flame_glow};">{streak}</h1>
+            <h1 style="color: {flame_color}; margin: 0; font-size: 36px; font-weight: 800; text-shadow: {glow_str};">{streak}</h1>
             <p style="color: #A0A0A0; margin: 8px 0 0 0; font-size: 12px;">{streak_msg}</p>
         </div>
     </div>

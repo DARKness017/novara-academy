@@ -848,7 +848,7 @@ def vault_screen():
         st.write("---")
 
 def login_screen():
-    st.markdown("<h1 style='text-align: center; color: #0B1B3D;'>🎓 Novara Academy</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #0B1B3D;'><i class='fa-solid fa-graduation-cap' style='color: #C09B5A;'></i> Novara Academy</h1>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>Secure Adaptive Quiz Engine</h3>", unsafe_allow_html=True)
     st.write("---")
 

@@ -737,7 +737,7 @@ def remove_from_vault(q_id):
     """Deletes a mastered question from the student's personal vault."""
     try:
         supabase.table("saved_questions").delete().eq("user_id", st.session_state.user_id).eq("question_id", q_id).execute()
-        st.toast("🗑️ Question removed from your Vault!", icon="✅")
+        st.toast("Question removed from your Vault!", icon="✅")
     except Exception:
         st.toast("Error removing question.", icon="❌")
 
@@ -750,7 +750,7 @@ def vault_screen():
     saved_res = supabase.table("saved_questions").select("question_id").eq("user_id", st.session_state.user_id).execute()
     
     if not saved_res.data:
-        st.info("Your vault is empty! Take a quiz and click '⭐ Save to Vault' on questions you want to review later.")
+        st.info("Your vault is empty! Take a quiz and click 'Save to Vault' on questions you want to review later.")
         return
 
     saved_q_ids = [item['question_id'] for item in saved_res.data]
@@ -793,7 +793,7 @@ def vault_screen():
             correct_text = q[f"option_{correct_letter.lower()}"]
             st.success(f"**✅ Correct Answer:** {correct_letter}) {correct_text}")
             
-            if st.button("🗑️ Remove from Vault", type="primary"):
+            if st.button("Remove from Vault", type="primary"):
                 supabase.table("saved_questions").delete().eq("user_id", st.session_state.user_id).eq("question_id", q['question_id']).execute()
                 st.session_state.reviewing_q_id = None
                 st.toast("Question removed from Vault!", icon="✅")
@@ -808,7 +808,7 @@ def vault_screen():
     # VIEW 2: KHAN ACADEMY STYLE GRID
     # ==========================================
     st.markdown(f"**Total Saved Questions:** {len(questions)}")
-    if st.button("🚀 Generate 10-Question Quiz from Vault", type="primary", use_container_width=True):
+    if st.button("Generate 10-Question Quiz from Vault", type="primary", use_container_width=True):
         start_saved_quiz()
     st.write("---")
 
@@ -842,7 +842,7 @@ def vault_screen():
                     b_cols = st.columns(chunk_size) 
                     for j, q in enumerate(chunk):
                         with b_cols[j]:
-                            if st.button(f"⭐ {i+j+1}", key=f"vq_{q['question_id']}", use_container_width=True):
+                            if st.button(f"{i+j+1}", key=f"vq_{q['question_id']}", use_container_width=True):
                                 st.session_state.reviewing_q_id = q['question_id']
                                 st.rerun()
         st.write("---")
@@ -862,7 +862,7 @@ def login_screen():
             # 1. Check if the user is currently locked out
             if time.time() < st.session_state.lockout_until:
                 remaining_seconds = int(st.session_state.lockout_until - time.time())
-                st.error(f"🔒 Account temporarily locked due to too many failed attempts. Try again in {remaining_seconds} seconds.")
+                st.markdown(f"<div style='background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 15px;'><i class='fa-solid fa-lock'></i> <b>Account temporarily locked.</b> Try again in {remaining_seconds} seconds.</div>", unsafe_allow_html=True)
             
             elif login_email and login_password:
                 try:
@@ -889,7 +889,7 @@ def login_screen():
                             st.session_state.failed_attempts += 1
                             if st.session_state.failed_attempts >= 5:
                                 st.session_state.lockout_until = time.time() + 300 # 5 minute lockout
-                                st.error("🔒 Too many failed attempts. You are locked out for 5 minutes.")
+                                st.markdown("<div style='background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 15px;'><i class='fa-solid fa-lock'></i> <b>Too many failed attempts.</b> You are locked out for 5 minutes.</div>", unsafe_allow_html=True)
                             else:
                                 attempts_left = 5 - st.session_state.failed_attempts
                                 st.error(f"❌ Invalid email or password. ({attempts_left} attempts remaining)")
@@ -898,7 +898,7 @@ def login_screen():
                         st.session_state.failed_attempts += 1
                         if st.session_state.failed_attempts >= 5:
                             st.session_state.lockout_until = time.time() + 300
-                            st.error("🔒 Too many failed attempts. You are locked out for 5 minutes.")
+                            st.markdown("<div style='background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 15px;'><i class='fa-solid fa-lock'></i> <b>Too many failed attempts.</b> You are locked out for 5 minutes.</div>", unsafe_allow_html=True)
                         else:
                             attempts_left = 5 - st.session_state.failed_attempts
                             st.error(f"❌ Invalid email or password. ({attempts_left} attempts remaining)")
@@ -1148,7 +1148,7 @@ def dashboard_screen():
             alltime_xp.index = range(1, len(alltime_xp) + 1)
             
             # Display Tabs
-            tab_month, tab_alltime = st.tabs(["📅 This Month", "🏆 All-Time"])
+            tab_month, tab_alltime = st.tabs(["This Month", "All-Time"])
             with tab_month:
                 if not monthly_xp.empty:
                     st.dataframe(monthly_xp, use_container_width=True)
@@ -1239,7 +1239,7 @@ def unit_detail_screen():
     st.info(f"**Current Setting:** Quizzes for this unit will pull **{st.session_state.difficulty}** questions.")
 
     st.write("")
-    if st.button(f"🚀 Start Quiz for {unit_name}", type="primary", use_container_width=True):
+    if st.button(f"Start Quiz for {unit_name}", type="primary", use_container_width=True):
         start_quiz(unit=unit_num)
         
     st.write("---")
@@ -1271,10 +1271,10 @@ def quiz_screen():
             # --- 2. DYNAMICALLY SHOW ONLY ONE BUTTON ---
             if ans['question_id'] in saved_q_ids:
                 # If it's already in the vault, ONLY show the Remove button
-                st.button("🗑️ Remove from Vault", key=f"remove_btn_{i}_{ans['question_id']}", on_click=remove_from_vault, args=(ans['question_id'],))
+                st.button("Remove from Vault", key=f"remove_btn_{i}_{ans['question_id']}", on_click=remove_from_vault, args=(ans['question_id'],))
             else:
                 # If it's not in the vault, ONLY show the Save button
-                st.button("⭐ Save to Vault", key=f"save_btn_{i}_{ans['question_id']}", on_click=save_to_vault, args=(ans['question_id'],))
+                st.button("Save to Vault", key=f"save_btn_{i}_{ans['question_id']}", on_click=save_to_vault, args=(ans['question_id'],))
             
             st.write("---")
             

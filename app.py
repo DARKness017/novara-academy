@@ -989,95 +989,48 @@ def dashboard_screen():
         pass
 
     # --- 2. Dynamic Gamification Gamestate Logic ---
-    streak = 31  # 🛑 TEMPORARY TEST: Change this number to test UI, then delete this line later!
-    
-    # --- 2. Dynamic Gamification Gamestate Logic ---
-    # streak = 31  # <-- ONLY uncomment this to forcefully test the fire UI!
-    
+    streak = 31
     if streak == 0:
-        flame_color = "#64748B" # Slate Gray
-        glow_str = "none"
+        card_bg = "linear-gradient(135deg, #1E293B 0%, #0F172A 100%)" # Slate Gray
+        icon_color = "#64748B"
+        text_color = "#94A3B8"
         streak_msg = "Start your streak!"
-        pulse_class = ""
-        card_class = ""
     elif 1 <= streak <= 7:
-        flame_color = "#FBBF24" # Yellow
-        glow_str = "0px 0px 6px rgba(251, 191, 36, 0.4)"
+        card_bg = "linear-gradient(135deg, #FBBF24 0%, #D97706 100%)" # Vibrant Yellow
+        icon_color = "#FFFFFF"
+        text_color = "#FFFFFF"
         streak_msg = "Heating Up!"
-        pulse_class = ""
-        card_class = ""
     elif 8 <= streak <= 30:
-        flame_color = "#F97316" # Orange
-        glow_str = "0px 0px 10px rgba(249, 115, 22, 0.6)"
+        card_bg = "linear-gradient(135deg, #F97316 0%, #C2410C 100%)" # Bright Orange
+        icon_color = "#FFFFFF"
+        text_color = "#FFFFFF"
         streak_msg = "On Fire!"
-        pulse_class = ""
-        card_class = ""
     else:
-        flame_color = "#EF4444" # Blazing Red
-        glow_str = "0px 0px 14px rgba(239, 68, 68, 0.8)"
+        card_bg = "linear-gradient(135deg, #EF4444 0%, #991B1B 100%)" # Blazing Red
+        icon_color = "#FFFFFF"
+        text_color = "#FFFFFF"
         streak_msg = "Unstoppable!"
-        pulse_class = "flame-flicker"
-        card_class = "fire-border"
 
-    # --- 3. Live JavaScript Countdown Widget & Dynamic Streak ---
-    # --- 3. Live JavaScript Countdown Widget & Dynamic Gamification ---
+    # --- 3. Live JavaScript Countdown Widget & Duolingo Layout ---
     components.html(
     f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* The Hyper-Realistic Flicker Animation */
-        @keyframes fire-flicker {{
-            0%, 100% {{ 
-                text-shadow: 0 0 10px #ef4444, 0 0 20px #ef4444, 0 0 30px #f97316; 
-                transform: scale(1) translateY(0px) rotate(-3deg); 
-                color: #ef4444; 
-            }}
-            25% {{ 
-                text-shadow: 0 0 12px #f97316, 0 0 22px #f97316, 0 0 32px #fbbf24; 
-                transform: scale(1.1) translateY(-2px) rotate(3deg); 
-                color: #fbbf24; 
-            }}
-            50% {{ 
-                text-shadow: 0 0 8px #ef4444, 0 0 18px #f97316, 0 0 28px #ef4444; 
-                transform: scale(0.95) translateY(1px) rotate(-1deg); 
-                color: #f97316; 
-            }}
-            75% {{ 
-                text-shadow: 0 0 14px #ef4444, 0 0 24px #fbbf24, 0 0 34px #f97316; 
-                transform: scale(1.05) translateY(-1px) rotate(2deg); 
-                color: #ef4444; 
-            }}
-        }}
-        .flame-flicker {{
-            animation: fire-flicker 0.4s infinite alternate !important;
-            display: inline-block;
-            filter: none !important; /* Overrides inline static shadow so animation handles it */
-        }}
-        /* The Card Border Energy Pulse */
-        @keyframes border-glow {{
-            0% {{ box-shadow: 0 10px 20px rgba(0,0,0,0.15), 0 0 10px rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.5); }}
-            100% {{ box-shadow: 0 10px 20px rgba(0,0,0,0.15), 0 0 25px rgba(239,68,68,0.8); border-color: rgba(239,68,68,1); }}
-        }}
-        .fire-border {{
-            animation: border-glow 1s infinite alternate !important;
-        }}
-    </style>
     
     <div style="display: flex; justify-content: space-between; font-family: 'Inter', sans-serif; margin-bottom: 5px; margin-top: 15px;">
         <!-- Countdown Card -->
-        <div style="background: linear-gradient(135deg, #0B1B3D 0%, #152A55 100%); border: 1px solid #C09B5A; border-radius: 16px; padding: 22px; width: 48%; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.15); box-sizing: border-box; transition: transform 0.3s ease;">
+        <div style="background: linear-gradient(135deg, #0B1B3D 0%, #152A55 100%); border: 1px solid #C09B5A; border-radius: 16px; padding: 22px; width: 48%; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.15); box-sizing: border-box;">
             <h4 style="color: #E2E8F0; margin-top: 0; margin-bottom: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-hourglass-half" style="color: #C09B5A; margin-right: 5px;"></i> AP Calc Exam</h4>
             <h1 id="countdown" style="color: #C09B5A; margin: 0; font-size: 26px; font-weight: 800;"></h1>
             <p style="color: #A0A0A0; margin: 8px 0 0 0; font-size: 12px;">Time Left (May 10)</p>
         </div>
         
-        <!-- Dynamic Gamified Streak Card -->
-        <div class="{card_class}" style="background: linear-gradient(135deg, #0B1B3D 0%, #152A55 100%); border: 1px solid {flame_color}; border-radius: 16px; padding: 22px; width: 48%; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.15); box-sizing: border-box; transition: transform 0.3s ease;">
-            <h4 style="color: #E2E8F0; margin-top: 0; margin-bottom: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">
-                <i class="fa-solid fa-fire {pulse_class}" style="color: {flame_color}; margin-right: 5px; filter: drop-shadow({glow_str}); transition: 0.3s;"></i> Daily Streak
-            </h4>
-            <h1 style="color: {flame_color}; margin: 0; font-size: 36px; font-weight: 800; text-shadow: {glow_str};">{streak}</h1>
-            <p style="color: #A0A0A0; margin: 8px 0 0 0; font-size: 12px;">{streak_msg}</p>
+        <!-- Duolingo-Style Gamified Streak Card -->
+        <div style="background: {card_bg}; border-radius: 16px; padding: 22px; width: 48%; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.15); box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: all 0.3s ease;">
+            <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 4px;">
+                <i class="fa-solid fa-fire" style="color: {icon_color}; font-size: 42px;"></i>
+                <h1 style="color: {text_color}; margin: 0; font-size: 46px; font-weight: 800; line-height: 1;">{streak}</h1>
+            </div>
+            <p style="color: {text_color}; margin: 0; font-size: 15px; font-weight: 600; opacity: 0.95;">{streak_msg}</p>
         </div>
     </div>
     

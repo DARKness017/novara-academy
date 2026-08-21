@@ -724,7 +724,9 @@ def vault_screen():
             st.write(f"**C)** {q['option_c']}")
             st.write(f"**D)** {q['option_d']}")
             st.write("---")
-            st.success(f"**✅ Correct Answer:** {q['correct_option']}) {q[f'option_{q['correct_option'].lower()}']}")
+            correct_letter = q['correct_option']
+            correct_text = q[f"option_{correct_letter.lower()}"]
+            st.success(f"**✅ Correct Answer:** {correct_letter}) {correct_text}")
             
             if st.button("🗑️ Remove from Vault", type="primary"):
                 supabase.table("saved_questions").delete().eq("user_id", st.session_state.user_id).eq("question_id", q['question_id']).execute()

@@ -989,7 +989,7 @@ def dashboard_screen():
         pass
 
     # --- 2. Dynamic Gamification Gamestate Logic ---
-    streak = 7  # 🛑 TEMPORARY TEST: Change this number to test UI, then delete this line later!
+    streak = 31  # 🛑 TEMPORARY TEST: Change this number to test UI, then delete this line later!
     
     if streak == 0:
         flame_color = "#64748B" # Slate Gray

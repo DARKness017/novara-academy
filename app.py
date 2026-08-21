@@ -24,7 +24,16 @@ st.markdown("""
         font-family: 'Inter', sans-serif !important;
     }
 
-    /* --- 1. AGGRESSIVELY REMOVE ALL STREAMLIT BRANDING --- */
+    /* --- 1. AMBIENT SAAS CANVAS (Removes the flat white void) --- */
+    .stApp {
+        background-color: #F8FAFC !important;
+        background-image: 
+            radial-gradient(at 0% 0%, rgba(11, 27, 61, 0.03) 0px, transparent 50%),
+            radial-gradient(at 100% 0%, rgba(192, 155, 90, 0.05) 0px, transparent 50%) !important;
+        background-attachment: fixed !important;
+    }
+
+    /* --- 2. REMOVE STREAMLIT CHROME --- */
     #MainMenu {visibility: hidden;}
     header {visibility: hidden;}
     footer {visibility: hidden;}
@@ -37,69 +46,92 @@ st.markdown("""
     
     .block-container {
         padding-top: 2rem !important;
-        padding-bottom: 0rem !important;
+        padding-bottom: 2rem !important;
+        max-width: 900px !important;
     }
 
-    /* --- 2. NOVARA ACADEMY ANIMATED BUTTONS --- */
+    /* --- 3. METRIC CARDS & DATA WRAPPERS --- */
+    div[data-testid="stMetric"] {
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 14px !important;
+        padding: 16px 20px !important;
+        box-shadow: 0 4px 12px rgba(11, 27, 61, 0.04) !important;
+        transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    }
+    div[data-testid="stMetric"]:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 20px rgba(11, 27, 61, 0.08) !important;
+        border-color: #C09B5A !important;
+    }
+
+    /* --- 4. NOVARA ACADEMY ANIMATED BUTTONS --- */
     .stButton > button {
         background-color: #0B1B3D !important;
         color: white !important;
-        border-radius: 8px !important;
-        border: 1px solid #C09B5A !important;
-        font-weight: 500;
-        transition: all 0.3s ease !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+        border-radius: 10px !important;
+        border: 1px solid rgba(192, 155, 90, 0.6) !important;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+        padding: 10px 20px !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 4px 10px rgba(11, 27, 61, 0.12) !important;
     }
     .stButton > button:hover {
         background-color: #C09B5A !important;
         color: #0B1B3D !important;
         border: 1px solid #0B1B3D !important;
-        transform: translateY(-2px) !important; /* Floats up slightly */
-        box-shadow: 0 6px 12px rgba(192, 155, 90, 0.3) !important; /* Soft Gold Glow */
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 18px rgba(192, 155, 90, 0.35) !important;
     }
     .stButton > button:active {
-        transform: translateY(1px) !important; /* Physical button press effect */
-        box-shadow: 0 2px 3px rgba(0,0,0,0.1) !important;
+        transform: translateY(1px) !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
     }
     
     .stButton > button[kind="primary"] {
-        background-color: #C09B5A !important;
+        background: linear-gradient(135deg, #C09B5A 0%, #B08B4A 100%) !important;
         color: #0B1B3D !important;
-        border-radius: 8px !important;
+        border-radius: 10px !important;
         border: 1px solid #0B1B3D !important;
-        font-weight: 600;
+        font-weight: 700;
     }
     .stButton > button[kind="primary"]:hover {
-        background-color: #0B1B3D !important;
-        color: white !important;
+        background: #0B1B3D !important;
+        color: #FFFFFF !important;
         border: 1px solid #C09B5A !important; 
-        box-shadow: 0 6px 12px rgba(11, 27, 61, 0.3) !important; /* Soft Navy Glow */
+        box-shadow: 0 8px 18px rgba(11, 27, 61, 0.25) !important;
     }
 
-    /* --- 3. CUSTOM GOLD PROGRESS BAR --- */
+    /* --- 5. CUSTOM GOLD PROGRESS BAR --- */
     [data-testid="stProgress"] > div > div > div > div {
-        background-color: #C09B5A !important;
+        background: linear-gradient(90deg, #0B1B3D 0%, #C09B5A 100%) !important;
+        border-radius: 8px !important;
+    }
+    [data-testid="stProgress"] > div > div {
+        background-color: #E2E8F0 !important;
+        border-radius: 8px !important;
     }
 
-    /* --- 4. NATIVE MARKDOWN TABLE STYLING --- */
+    /* --- 6. NATIVE MARKDOWN TABLE STYLING --- */
     .stMarkdown table {
         background-color: #0B1B3D !important;
         border: 2px solid #C09B5A !important;
         border-top: none !important;
-        border-bottom-left-radius: 12px !important;
-        border-bottom-right-radius: 12px !important;
+        border-bottom-left-radius: 14px !important;
+        border-bottom-right-radius: 14px !important;
         color: white !important;
         width: 100% !important;
         margin-top: -10px !important;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.15) !important; /* Deepened shadow */
+        box-shadow: 0 10px 25px rgba(11, 27, 61, 0.2) !important;
     }
     .stMarkdown th { display: none !important; }
     .stMarkdown td {
-        border-bottom: 1px solid #C09B5A !important;
+        border-bottom: 1px solid rgba(192, 155, 90, 0.4) !important;
         border-top: none !important;
         border-right: none !important;
         border-left: none !important;
-        padding: 15px !important;
+        padding: 16px !important;
         vertical-align: top !important;
         font-size: 14px !important;
     }
@@ -110,33 +142,43 @@ st.markdown("""
         width: 28% !important;
     }
 
-    /* --- 5. SAAS SIDEBAR STYLING --- */
+    /* --- 7. SAAS SIDEBAR STYLING --- */
     [data-testid="stSidebar"] {
         background-color: #0B1B3D !important;
-        border-right: 2px solid #C09B5A !important;
+        border-right: 1.5px solid #C09B5A !important;
+        box-shadow: 4px 0 20px rgba(0,0,0,0.15) !important;
     }
     [data-testid="stSidebar"] hr {
-        border-bottom: 1px solid #C09B5A !important;
+        border-bottom: 1px solid rgba(192, 155, 90, 0.3) !important;
     }
 
-    /* --- 6. PREMIUM QUIZ OPTION CARDS --- */
+    /* --- 8. EXPANDER / ACCORDION CARDS --- */
+    div[data-testid="stExpander"] {
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.03) !important;
+        margin-bottom: 12px !important;
+    }
+
+    /* --- 9. PREMIUM QUIZ OPTION CARDS --- */
     div[role="radiogroup"] {
-        gap: 15px !important; 
+        gap: 14px !important; 
     }
     div[role="radiogroup"] > label {
         background-color: #FFFFFF !important;
-        border: 2px solid #E2E8F0 !important; 
+        border: 1.5px solid #E2E8F0 !important; 
         border-radius: 12px !important;
-        padding: 15px 20px !important; 
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+        padding: 16px 22px !important; 
+        box-shadow: 0 4px 8px rgba(11, 27, 61, 0.03) !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
         cursor: pointer !important;
     }
     div[role="radiogroup"] > label:hover {
-        border: 2px solid #C09B5A !important; 
-        background-color: #F8FAFC !important; 
-        transform: translateY(-4px) !important; /* Float up */
-        box-shadow: 0 12px 20px rgba(192, 155, 90, 0.15) !important; /* Premium gold shadow */
+        border: 1.5px solid #C09B5A !important; 
+        background-color: #FAF8F5 !important; 
+        transform: translateY(-3px) !important; 
+        box-shadow: 0 10px 20px rgba(192, 155, 90, 0.18) !important; 
     }
     </style>
 """, unsafe_allow_html=True)

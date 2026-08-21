@@ -418,6 +418,8 @@ if 'lockout_until' not in st.session_state:
     st.session_state.lockout_until = 0
 if 'reviewing_q_id' not in st.session_state:
     st.session_state.reviewing_q_id = None
+if 'auth_mode' not in st.session_state:
+    st.session_state.auth_mode = 'login'
 
 # --- 4. Core Application Logic ---
 def start_quiz(unit=None):
@@ -673,106 +675,119 @@ def vault_screen():
         st.write("---")
 
 def login_screen():
-    st.markdown("<h1 style='text-align: center; color: #0B1B3D;'><i class='fa-solid fa-graduation-cap' style='color: #C09B5A;'></i> Novara Academy</h1>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>Secure Adaptive Quiz Engine</h3>", unsafe_allow_html=True)
-    st.write("---")
-
-    tab1, tab2 = st.tabs(["Log In", "Create Account"])
+    # Create a centered "card" layout using columns (1 part blank, 1.5 parts content, 1 part blank)
+    _, col2, _ = st.columns([1, 1.5, 1])
     
-    with tab1:
-        login_email = st.text_input("Email Address", key="login_email")
-        login_password = st.text_input("Password", type="password", key="login_password")
+    with col2:
+        st.write("") # Top padding
+        st.write("")
+        st.markdown("<h1 style='text-align: center; color: #0B1B3D;'><i class='fa-solid fa-graduation-cap' style='color: #C09B5A;'></i> Novara Academy</h1>", unsafe_allow_html=True)
         
-        if st.button("Log In", type="primary"):
-            # 1. Check if the user is currently locked out
-            if time.time() < st.session_state.lockout_until:
-                remaining_seconds = int(st.session_state.lockout_until - time.time())
-                st.markdown(f"<div style='background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 15px;'><i class='fa-solid fa-lock'></i> <b>Account temporarily locked.</b> Try again in {remaining_seconds} seconds.</div>", unsafe_allow_html=True)
+        # --- SIGN IN VIEW ---
+        if st.session_state.auth_mode == 'login':
+            st.markdown("<p style='text-align: center; color: #64748B; margin-top: -10px; margin-bottom: 30px; font-size: 15px;'>Welcome back! Please enter your details.</p>", unsafe_allow_html=True)
             
-            elif login_email and login_password:
-                try:
-                    user_record = supabase.table("users").select("*").eq("email", login_email).execute()
-                    
-                    if user_record.data:
-                        user = user_record.data[0]
-                        # Verify the bcrypt password securely
-                        if bcrypt.checkpw(login_password.encode('utf-8'), user['password_hash'].encode('utf-8')):
-                            # SUCCESS: Reset the strikeout counters!
-                            st.session_state.failed_attempts = 0
-                            st.session_state.lockout_until = 0
-                            
-                            st.session_state.logged_in = True
-                            st.session_state.user_id = user['user_id']
-                            st.session_state.username = user['username']
-                            st.session_state.is_admin = user.get('is_admin', False)
-                            st.session_state.current_screen = "dashboard"
-                            st.success(f"Welcome back, {user['username']}!")
-                            time.sleep(1)
-                            st.rerun()
+            login_email = st.text_input("Email Address", key="login_email")
+            login_password = st.text_input("Password", type="password", key="login_password")
+            
+            st.write("")
+            if st.button("Sign In", type="primary", use_container_width=True):
+                if time.time() < st.session_state.lockout_until:
+                    remaining_seconds = int(st.session_state.lockout_until - time.time())
+                    st.markdown(f"<div style='background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 15px;'><i class='fa-solid fa-lock'></i> <b>Account temporarily locked.</b> Try again in {remaining_seconds} seconds.</div>", unsafe_allow_html=True)
+                elif login_email and login_password:
+                    try:
+                        user_record = supabase.table("users").select("*").eq("email", login_email).execute()
+                        if user_record.data:
+                            user = user_record.data[0]
+                            if bcrypt.checkpw(login_password.encode('utf-8'), user['password_hash'].encode('utf-8')):
+                                st.session_state.failed_attempts = 0
+                                st.session_state.lockout_until = 0
+                                st.session_state.logged_in = True
+                                st.session_state.user_id = user['user_id']
+                                st.session_state.username = user['username']
+                                st.session_state.is_admin = user.get('is_admin', False)
+                                st.session_state.current_screen = "dashboard"
+                                st.success(f"Welcome back, {user['username']}!")
+                                time.sleep(1)
+                                st.rerun()
+                            else:
+                                st.session_state.failed_attempts += 1
+                                if st.session_state.failed_attempts >= 5:
+                                    st.session_state.lockout_until = time.time() + 300 
+                                    st.markdown("<div style='background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 15px;'><i class='fa-solid fa-lock'></i> <b>Too many failed attempts.</b> You are locked out for 5 minutes.</div>", unsafe_allow_html=True)
+                                else:
+                                    attempts_left = 5 - st.session_state.failed_attempts
+                                    st.error(f"❌ Invalid email or password. ({attempts_left} attempts remaining)")
                         else:
-                            # FAILED PASSWORD
                             st.session_state.failed_attempts += 1
                             if st.session_state.failed_attempts >= 5:
-                                st.session_state.lockout_until = time.time() + 300 # 5 minute lockout
+                                st.session_state.lockout_until = time.time() + 300
                                 st.markdown("<div style='background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 15px;'><i class='fa-solid fa-lock'></i> <b>Too many failed attempts.</b> You are locked out for 5 minutes.</div>", unsafe_allow_html=True)
                             else:
                                 attempts_left = 5 - st.session_state.failed_attempts
                                 st.error(f"❌ Invalid email or password. ({attempts_left} attempts remaining)")
-                    else:
-                        # FAILED EMAIL (We treat it as a failed attempt to avoid giving hackers clues)
-                        st.session_state.failed_attempts += 1
-                        if st.session_state.failed_attempts >= 5:
-                            st.session_state.lockout_until = time.time() + 300
-                            st.markdown("<div style='background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 15px;'><i class='fa-solid fa-lock'></i> <b>Too many failed attempts.</b> You are locked out for 5 minutes.</div>", unsafe_allow_html=True)
-                        else:
-                            attempts_left = 5 - st.session_state.failed_attempts
-                            st.error(f"❌ Invalid email or password. ({attempts_left} attempts remaining)")
-                except Exception as e:
-                    st.error(f"❌ Error during login: {e}")
-            else:
-                st.warning("⚠️ Please fill in both fields.")
-
-    with tab2:
-        reg_username = st.text_input("Full Name / Username", key="reg_username")
-        reg_email = st.text_input("Email Address", key="reg_email")
-        reg_password = st.text_input("Password", type="password", key="reg_password")
-        
-        if st.button("Create Account", type="primary"):
-            if reg_username and reg_email and reg_password:
-                
-                # --- NEW: STRICT REGEX EMAIL FORMAT VALIDATION ---
-                email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
-                if not re.match(email_pattern, reg_email):
-                    st.warning("⚠️ Please enter a valid email address format (e.g., student@example.com).")
-                elif len(reg_password) < 8:
-                    st.warning("⚠️ Password must be at least 8 characters long.")
-                else:
-                    try:
-                        # 1. Check if email already exists
-                        email_check = supabase.table("users").select("*").eq("email", reg_email).execute()
-                        
-                        # 2. Check if username already exists
-                        username_check = supabase.table("users").select("*").eq("username", reg_username).execute()
-                        
-                        if email_check.data:
-                            st.error("❌ Registration failed: An account with this email already exists.")
-                        elif username_check.data:
-                            st.error("❌ Registration failed: That username is already taken. Please choose another one.")
-                        else:
-                            # Securely hash the password using bcrypt
-                            salt = bcrypt.gensalt()
-                            hashed_pw = bcrypt.hashpw(reg_password.encode('utf-8'), salt).decode('utf-8')
-                            
-                            supabase.table("users").insert({
-                                "username": reg_username,
-                                "email": reg_email,
-                                "password_hash": hashed_pw 
-                            }).execute()
-                            st.success("✅ Account created successfully! You can now Log In.")
                     except Exception as e:
-                        st.error(f"❌ Registration failed: {e}")
-            else:
-                st.warning("⚠️ Please fill in all fields.")
+                        st.error(f"❌ Error during login: {e}")
+                else:
+                    st.warning("⚠️ Please fill in both fields.")
+            
+            # The Toggle Link
+            st.write("---")
+            st.markdown("<div style='text-align: center; color: #64748B; font-size: 13px; margin-bottom: 10px;'>Don't have an account?</div>", unsafe_allow_html=True)
+            if st.button("Sign Up", use_container_width=True):
+                st.session_state.auth_mode = 'register'
+                st.rerun()
+
+        # --- SIGN UP VIEW ---
+        else:
+            st.markdown("<p style='text-align: center; color: #64748B; margin-top: -10px; margin-bottom: 30px; font-size: 15px;'>Create an account to start mastering AP Calc.</p>", unsafe_allow_html=True)
+            
+            reg_username = st.text_input("Full Name", key="reg_username")
+            reg_email = st.text_input("Email Address", key="reg_email")
+            reg_password = st.text_input("Password (min. 8 chars)", type="password", key="reg_password")
+            
+            st.write("")
+            if st.button("Sign Up", type="primary", use_container_width=True):
+                if reg_username and reg_email and reg_password:
+                    email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+                    if not re.match(email_pattern, reg_email):
+                        st.warning("⚠️ Please enter a valid email address format (e.g., student@example.com).")
+                    elif len(reg_password) < 8:
+                        st.warning("⚠️ Password must be at least 8 characters long.")
+                    else:
+                        try:
+                            email_check = supabase.table("users").select("*").eq("email", reg_email).execute()
+                            username_check = supabase.table("users").select("*").eq("username", reg_username).execute()
+                            
+                            if email_check.data:
+                                st.error("❌ Registration failed: An account with this email already exists.")
+                            elif username_check.data:
+                                st.error("❌ Registration failed: That username is already taken. Please choose another one.")
+                            else:
+                                salt = bcrypt.gensalt()
+                                hashed_pw = bcrypt.hashpw(reg_password.encode('utf-8'), salt).decode('utf-8')
+                                
+                                supabase.table("users").insert({
+                                    "username": reg_username,
+                                    "email": reg_email,
+                                    "password_hash": hashed_pw 
+                                }).execute()
+                                st.success("✅ Account created successfully! Switching to Log In...")
+                                time.sleep(1.5)
+                                st.session_state.auth_mode = 'login'
+                                st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Registration failed: {e}")
+                else:
+                    st.warning("⚠️ Please fill in all fields.")
+
+            # The Toggle Link
+            st.write("---")
+            st.markdown("<div style='text-align: center; color: #64748B; font-size: 13px; margin-bottom: 10px;'>Already have an account?</div>", unsafe_allow_html=True)
+            if st.button("Sign In", use_container_width=True):
+                st.session_state.auth_mode = 'login'
+                st.rerun()
 
 def dashboard_screen():
     st.markdown(f"<h1 style='text-align: center; color: #0B1B3D;'>Welcome, {st.session_state.username}!</h1>", unsafe_allow_html=True)

@@ -691,35 +691,41 @@ def login_screen():
             <p style="color: #64748B; font-size: 16px; margin-bottom: 35px; line-height: 1.6;">
                 Welcome to Novara Academy's Adaptive Engine. We track your performance in real-time to pinpoint weaknesses, optimize your study time, and help you secure a 5 on the AP Exam.
             </p>
-            
-            <div style="display: flex; align-items: flex-start; margin-bottom: 25px;">
-                <div style="background-color: rgba(192, 155, 90, 0.15); border-radius: 8px; padding: 10px; margin-right: 15px;">
-                    <i class="fa-solid fa-bullseye" style="color: #C09B5A; font-size: 20px;"></i>
-                </div>
-                <div>
-                    <b style="color: #0B1B3D; font-size: 16px;">Adaptive Quizzing</b>
-                    <p style="color: #64748B; font-size: 14px; margin: 2px 0 0 0;">Dynamic algorithms automatically target your weakest units.</p>
-                </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div style="display: flex; align-items: flex-start; margin-bottom: 25px;">
+            <div style="background-color: rgba(192, 155, 90, 0.15); border-radius: 8px; padding: 10px; margin-right: 15px;">
+                <i class="fa-solid fa-bullseye" style="color: #C09B5A; font-size: 20px;"></i>
             </div>
-            
-            <div style="display: flex; align-items: flex-start; margin-bottom: 25px;">
-                <div style="background-color: rgba(192, 155, 90, 0.15); border-radius: 8px; padding: 10px; margin-right: 15px;">
-                    <i class="fa-solid fa-crosshairs" style="color: #C09B5A; font-size: 20px;"></i>
-                </div>
-                <div>
-                    <b style="color: #0B1B3D; font-size: 16px;">Advanced Analytics</b>
-                    <p style="color: #64748B; font-size: 14px; margin: 2px 0 0 0;">Track your mastery with precision radar charts and speed metrics.</p>
-                </div>
+            <div>
+                <b style="color: #0B1B3D; font-size: 16px;">Adaptive Quizzing</b>
+                <p style="color: #64748B; font-size: 14px; margin: 2px 0 0 0;">Dynamic algorithms automatically target your weakest units.</p>
             </div>
-            
-            <div style="display: flex; align-items: flex-start;">
-                <div style="background-color: rgba(192, 155, 90, 0.15); border-radius: 8px; padding: 10px; margin-right: 15px;">
-                    <i class="fa-solid fa-bookmark" style="color: #C09B5A; font-size: 20px;"></i>
-                </div>
-                <div>
-                    <b style="color: #0B1B3D; font-size: 16px;">Personal Study Vault</b>
-                    <p style="color: #64748B; font-size: 14px; margin: 2px 0 0 0;">Save challenging questions and review them on demand.</p>
-                </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div style="display: flex; align-items: flex-start; margin-bottom: 25px;">
+            <div style="background-color: rgba(192, 155, 90, 0.15); border-radius: 8px; padding: 10px; margin-right: 15px;">
+                <i class="fa-solid fa-crosshairs" style="color: #C09B5A; font-size: 20px;"></i>
+            </div>
+            <div>
+                <b style="color: #0B1B3D; font-size: 16px;">Advanced Analytics</b>
+                <p style="color: #64748B; font-size: 14px; margin: 2px 0 0 0;">Track your mastery with precision radar charts and speed metrics.</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div style="display: flex; align-items: flex-start;">
+            <div style="background-color: rgba(192, 155, 90, 0.15); border-radius: 8px; padding: 10px; margin-right: 15px;">
+                <i class="fa-solid fa-bookmark" style="color: #C09B5A; font-size: 20px;"></i>
+            </div>
+            <div>
+                <b style="color: #0B1B3D; font-size: 16px;">Personal Study Vault</b>
+                <p style="color: #64748B; font-size: 14px; margin: 2px 0 0 0;">Save challenging questions and review them on demand.</p>
             </div>
         </div>
         """, unsafe_allow_html=True)

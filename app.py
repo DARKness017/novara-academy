@@ -675,13 +675,57 @@ def vault_screen():
         st.write("---")
 
 def login_screen():
-    # Create a centered "card" layout using columns (1 part blank, 1.5 parts content, 1 part blank)
-    _, col2, _ = st.columns([1, 1.5, 1])
+    st.write("") # Top padding
+    st.write("")
     
-    with col2:
-        st.write("") # Top padding
-        st.write("")
-        st.markdown("<h1 style='text-align: center; color: #0B1B3D;'><i class='fa-solid fa-graduation-cap' style='color: #C09B5A;'></i> Novara Academy</h1>", unsafe_allow_html=True)
+    # --- Split Screen Layout: 1.2 parts Info (Left) | 0.2 Spacing | 1 part Login (Right) ---
+    col_info, col_space, col_login = st.columns([1.2, 0.2, 1])
+    
+    with col_info:
+        st.markdown("""
+        <div style="padding-top: 30px; padding-right: 20px;">
+            <h1 style="color: #0B1B3D; font-size: 42px; font-weight: 800; line-height: 1.1; margin-bottom: 15px;">
+                Master AP Calculus.<br>
+                <span style="color: #C09B5A;">Smarter, Not Harder.</span>
+            </h1>
+            <p style="color: #64748B; font-size: 16px; margin-bottom: 35px; line-height: 1.6;">
+                Welcome to Novara Academy's Adaptive Engine. We track your performance in real-time to pinpoint weaknesses, optimize your study time, and help you secure a 5 on the AP Exam.
+            </p>
+            
+            <div style="display: flex; align-items: flex-start; margin-bottom: 25px;">
+                <div style="background-color: rgba(192, 155, 90, 0.15); border-radius: 8px; padding: 10px; margin-right: 15px;">
+                    <i class="fa-solid fa-bullseye" style="color: #C09B5A; font-size: 20px;"></i>
+                </div>
+                <div>
+                    <b style="color: #0B1B3D; font-size: 16px;">Adaptive Quizzing</b>
+                    <p style="color: #64748B; font-size: 14px; margin: 2px 0 0 0;">Dynamic algorithms automatically target your weakest units.</p>
+                </div>
+            </div>
+            
+            <div style="display: flex; align-items: flex-start; margin-bottom: 25px;">
+                <div style="background-color: rgba(192, 155, 90, 0.15); border-radius: 8px; padding: 10px; margin-right: 15px;">
+                    <i class="fa-solid fa-crosshairs" style="color: #C09B5A; font-size: 20px;"></i>
+                </div>
+                <div>
+                    <b style="color: #0B1B3D; font-size: 16px;">Advanced Analytics</b>
+                    <p style="color: #64748B; font-size: 14px; margin: 2px 0 0 0;">Track your mastery with precision radar charts and speed metrics.</p>
+                </div>
+            </div>
+            
+            <div style="display: flex; align-items: flex-start;">
+                <div style="background-color: rgba(192, 155, 90, 0.15); border-radius: 8px; padding: 10px; margin-right: 15px;">
+                    <i class="fa-solid fa-bookmark" style="color: #C09B5A; font-size: 20px;"></i>
+                </div>
+                <div>
+                    <b style="color: #0B1B3D; font-size: 16px;">Personal Study Vault</b>
+                    <p style="color: #64748B; font-size: 14px; margin: 2px 0 0 0;">Save challenging questions and review them on demand.</p>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_login:
+        st.markdown("<div style='text-align: center; margin-bottom: 10px;'><i class='fa-solid fa-graduation-cap' style='color: #C09B5A; font-size: 32px;'></i><h2 style='color: #0B1B3D; margin-top: 10px;'>Novara Academy</h2></div>", unsafe_allow_html=True)
         
         # --- SIGN IN VIEW ---
         if st.session_state.auth_mode == 'login':
@@ -718,7 +762,7 @@ def login_screen():
                                     st.markdown("<div style='background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 15px;'><i class='fa-solid fa-lock'></i> <b>Too many failed attempts.</b> You are locked out for 5 minutes.</div>", unsafe_allow_html=True)
                                 else:
                                     attempts_left = 5 - st.session_state.failed_attempts
-                                    st.error(f"❌ Invalid email or password. ({attempts_left} attempts remaining)")
+                                    st.error(f"Invalid email or password. ({attempts_left} attempts remaining)")
                         else:
                             st.session_state.failed_attempts += 1
                             if st.session_state.failed_attempts >= 5:
@@ -726,11 +770,11 @@ def login_screen():
                                 st.markdown("<div style='background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 15px;'><i class='fa-solid fa-lock'></i> <b>Too many failed attempts.</b> You are locked out for 5 minutes.</div>", unsafe_allow_html=True)
                             else:
                                 attempts_left = 5 - st.session_state.failed_attempts
-                                st.error(f"❌ Invalid email or password. ({attempts_left} attempts remaining)")
+                                st.error(f"Invalid email or password. ({attempts_left} attempts remaining)")
                     except Exception as e:
-                        st.error(f"❌ Error during login: {e}")
+                        st.error(f"Error during login: {e}")
                 else:
-                    st.warning("⚠️ Please fill in both fields.")
+                    st.warning("Please fill in both fields.")
             
             # The Toggle Link
             st.write("---")
@@ -752,18 +796,18 @@ def login_screen():
                 if reg_username and reg_email and reg_password:
                     email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
                     if not re.match(email_pattern, reg_email):
-                        st.warning("⚠️ Please enter a valid email address format (e.g., student@example.com).")
+                        st.warning("Please enter a valid email address format (e.g., student@example.com).")
                     elif len(reg_password) < 8:
-                        st.warning("⚠️ Password must be at least 8 characters long.")
+                        st.warning("Password must be at least 8 characters long.")
                     else:
                         try:
                             email_check = supabase.table("users").select("*").eq("email", reg_email).execute()
                             username_check = supabase.table("users").select("*").eq("username", reg_username).execute()
                             
                             if email_check.data:
-                                st.error("❌ Registration failed: An account with this email already exists.")
+                                st.error("Registration failed: An account with this email already exists.")
                             elif username_check.data:
-                                st.error("❌ Registration failed: That username is already taken. Please choose another one.")
+                                st.error("Registration failed: That username is already taken. Please choose another one.")
                             else:
                                 salt = bcrypt.gensalt()
                                 hashed_pw = bcrypt.hashpw(reg_password.encode('utf-8'), salt).decode('utf-8')
@@ -773,14 +817,14 @@ def login_screen():
                                     "email": reg_email,
                                     "password_hash": hashed_pw 
                                 }).execute()
-                                st.success("✅ Account created successfully! Switching to Log In...")
+                                st.success("Account created successfully! Switching to Log In...")
                                 time.sleep(1.5)
                                 st.session_state.auth_mode = 'login'
                                 st.rerun()
                         except Exception as e:
-                            st.error(f"❌ Registration failed: {e}")
+                            st.error(f"Registration failed: {e}")
                 else:
-                    st.warning("⚠️ Please fill in all fields.")
+                    st.warning("Please fill in all fields.")
 
             # The Toggle Link
             st.write("---")

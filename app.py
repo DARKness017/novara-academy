@@ -989,7 +989,7 @@ def dashboard_screen():
         pass
 
     # --- 2. Dynamic Gamification Gamestate Logic ---
-    streak = 31
+    streak = 10
     if streak == 0:
         card_bg = "linear-gradient(135deg, #1E293B 0%, #0F172A 100%)" # Slate Gray
         icon_color = "#64748B"

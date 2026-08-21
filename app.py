@@ -1051,7 +1051,7 @@ def dashboard_screen():
     )
     
     # --- 2. 🏆 TROPHY CASE (MASTERY BADGES) ---
-    st.markdown("<h3 style='text-align: center; color: #0B1B3D; margin-bottom: 15px;'>🏆 Unit Mastery Trophy Case</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; color: #0B1B3D; margin-bottom: 15px;'><i class='fa-solid fa-award' style='color: #C09B5A;'></i> Unit Mastery Trophy Case</h3>", unsafe_allow_html=True)
     
     unit_titles = {
         1: "Limits", 2: "Diff Basics", 3: "Composite", 4: "Context Apps", 5: "Analytical Apps",
@@ -1115,7 +1115,7 @@ def dashboard_screen():
 
     # --- 4. 🌍 GLOBAL LEADERBOARD (Monthly & All-Time) ---
     st.write("---")
-    st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>🌍 Global Leaderboard</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; color: #0B1B3D;'><i class='fa-solid fa-globe' style='color: #C09B5A;'></i> Global Leaderboard</h3>", unsafe_allow_html=True)
     
     # Fetch Leaderboard Data
     lb_users_res = supabase.table("users").select("user_id, username").execute()
@@ -1418,7 +1418,7 @@ def analytics_screen():
         st.rerun()
 
 def admin_dashboard_screen():
-    st.markdown("<h1 style='text-align: center; color: #0B1B3D;'>👑  Platform Administration</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #0B1B3D;'><i class='fa-solid fa-crown' style='color: #C09B5A;'></i> Platform Administration</h1>", unsafe_allow_html=True)
     st.write("---")
 
     users_res = supabase.table("users").select("user_id, username").execute()
@@ -1461,7 +1461,7 @@ def admin_dashboard_screen():
             "Weakest Unit": weakest_unit if total_q > 0 else "N/A"
         })
     
-    st.markdown("### 🌍 Global Platform Metrics")
+    st.markdown("<h3 style='text-align: center; color: #0B1B3D;'><i class='fa-solid fa-globe' style='color: #C09B5A;'></i> Global Platform Metrics</h3>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
     c1.metric("Total Students", len(users))
     c2.metric("Total Questions Answered", len(attempts_res.data))
@@ -1469,7 +1469,7 @@ def admin_dashboard_screen():
     c3.metric("Global Average Accuracy", f"{global_acc:.1f}%")
     
     st.write("---")
-    st.markdown("### 📋 Student Roster & Leaderboard")
+    st.markdown("<h3 style='color: #0B1B3D;'><i class='fa-solid fa-users' style='color: #C09B5A;'></i> Student Roster & Leaderboard</h3>", unsafe_allow_html=True)
     
     df = pd.DataFrame(student_stats)
     if not df.empty:

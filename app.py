@@ -425,6 +425,8 @@ if 'auth_mode' not in st.session_state:
     st.session_state.auth_mode = 'login'
 if 'current_answers' not in st.session_state:
     st.session_state.current_answers = {}
+if 'hide_guide' not in st.session_state:
+    st.session_state.hide_guide = False
 
 # --- 4. Core Application Logic ---
 def start_quiz(unit=None):
@@ -915,6 +917,33 @@ def login_screen():
 def dashboard_screen():
     st.markdown(f"<h1 style='text-align: center; color: #0B1B3D;'>Welcome, {st.session_state.username}!</h1>", unsafe_allow_html=True)
     
+    # --- 0. 🗺️ ONBOARDING QUICK GUIDE ---
+    if not st.session_state.get('hide_guide', False):
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, #0B1B3D 0%, #152A55 100%); padding: 25px; border-radius: 16px; border: 1px solid #C09B5A; box-shadow: 0 10px 20px rgba(0,0,0,0.15); margin-bottom: 15px; margin-top: 10px;">
+            <h3 style="color: #C09B5A; margin-top: 0; text-align: center; margin-bottom: 20px;"><i class="fa-solid fa-map-location-dot"></i> Welcome to Novara Academy</h3>
+            <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+                <div style="flex: 1; min-width: 200px;">
+                    <h4 style="color: #FFFFFF; margin-top: 0; font-size: 16px;"><i class="fa-solid fa-brain" style="color: #C09B5A;"></i> Adaptive Engine</h4>
+                    <p style="font-size: 13px; color: #94A3B8; line-height: 1.5; margin-bottom: 0;">Click <b>Start Full Adaptive Quiz</b>. The algorithm tracks your unit accuracy and automatically targets your weakest topics to force improvement.</p>
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <h4 style="color: #FFFFFF; margin-top: 0; font-size: 16px;"><i class="fa-solid fa-fire" style="color: #C09B5A;"></i> XP & Streaks</h4>
+                    <p style="font-size: 13px; color: #94A3B8; line-height: 1.5; margin-bottom: 0;">Consistency is key. You earn <b>1 XP</b> for every <i>correct</i> answer. Practice daily to build your blazing streak and climb the Leaderboard!</p>
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <h4 style="color: #FFFFFF; margin-top: 0; font-size: 16px;"><i class="fa-solid fa-bookmark" style="color: #C09B5A;"></i> The Vault</h4>
+                    <p style="font-size: 13px; color: #94A3B8; line-height: 1.5; margin-bottom: 0;">Don't lose hard questions. Click <b>Save to Vault</b> during a quiz review to build a personal bank, then generate custom practice quizzes.</p>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button("Got it! Dismiss Guide", type="primary", use_container_width=True):
+            st.session_state.hide_guide = True
+            st.rerun()
+        st.write("---")
+
     # --- 1. ⏱️ AP EXAM COUNTDOWN & STREAK TRACKER ---
     tz = ZoneInfo("Asia/Tashkent")
     exam_datetime = datetime(2027, 5, 10, 8, 0, 0, tzinfo=tz) 

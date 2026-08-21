@@ -526,6 +526,8 @@ if 'failed_attempts' not in st.session_state:
     st.session_state.failed_attempts = 0
 if 'lockout_until' not in st.session_state:
     st.session_state.lockout_until = 0
+if 'reviewing_q_id' not in st.session_state:
+    st.session_state.reviewing_q_id = None
 
 # --- 4. Core Application Logic ---
 def start_quiz(unit=None):
@@ -675,6 +677,108 @@ def remove_from_vault(q_id):
         st.toast("Error removing question.", icon="❌")
 
 # --- 5. UI Screens ---
+def vault_screen():
+    st.markdown("<h1 style='text-align: center; color: #0B1B3D;'>⭐ My Saved Questions Vault</h1>", unsafe_allow_html=True)
+    st.write("---")
+
+    # 1. Fetch saved question IDs for this user
+    saved_res = supabase.table("saved_questions").select("question_id").eq("user_id", st.session_state.user_id).execute()
+    
+    if not saved_res.data:
+        st.info("Your vault is empty! Take a quiz and click '⭐ Save to Vault' on questions you want to review later.")
+        return
+
+    saved_q_ids = [item['question_id'] for item in saved_res.data]
+    
+    # 2. Fetch the actual questions from the question bank
+    q_res = supabase.table("questions").select("*").in_("question_id", saved_q_ids).execute()
+    questions = q_res.data if q_res.data else []
+
+    if not questions:
+        st.info("Your vault is empty!")
+        return
+
+    # ==========================================
+    # VIEW 1: SPECIFIC QUESTION REVIEW MODE
+    # ==========================================
+    if st.session_state.get('reviewing_q_id'):
+        # Find the specific question the user clicked
+        q = next((q for q in questions if q['question_id'] == st.session_state.reviewing_q_id), None)
+        
+        if q:
+            if st.button("← Back to Vault Grid"):
+                st.session_state.reviewing_q_id = None
+                st.rerun()
+            
+            st.write("---")
+            st.markdown(f"### Unit {q['unit_number']} - {q['difficulty']}")
+            
+            # Show image first, just like the real quiz!
+            if q.get('image_url'):
+                st.image(q['image_url'], use_container_width=True)
+                
+            st.markdown(f"**{q['question_text']}**")
+            st.write("")
+            st.write(f"**A)** {q['option_a']}")
+            st.write(f"**B)** {q['option_b']}")
+            st.write(f"**C)** {q['option_c']}")
+            st.write(f"**D)** {q['option_d']}")
+            st.write("---")
+            st.success(f"**✅ Correct Answer:** {q['correct_option']}) {q[f'option_{q['correct_option'].lower()}']}")
+            
+            if st.button("🗑️ Remove from Vault", type="primary"):
+                supabase.table("saved_questions").delete().eq("user_id", st.session_state.user_id).eq("question_id", q['question_id']).execute()
+                st.session_state.reviewing_q_id = None
+                st.toast("Question removed from Vault!", icon="✅")
+                time.sleep(0.5)
+                st.rerun()
+        else:
+            st.session_state.reviewing_q_id = None
+            st.rerun()
+        return
+
+    # ==========================================
+    # VIEW 2: KHAN ACADEMY STYLE GRID
+    # ==========================================
+    st.markdown(f"**Total Saved Questions:** {len(questions)}")
+    if st.button("🚀 Generate 10-Question Quiz from Vault", type="primary", use_container_width=True):
+        start_saved_quiz()
+    st.write("---")
+
+    unit_titles = {
+        1: "Limits", 2: "Diff Basics", 3: "Composite", 4: "Context Apps", 5: "Analytical Apps",
+        6: "Integration", 7: "Diff Eq", 8: "Integration Apps", 9: "Parametric/Polar", 10: "Series"
+    }
+
+    # Group questions by unit
+    q_by_unit = {i: [] for i in range(1, 11)}
+    for q in questions:
+        q_by_unit[q['unit_number']].append(q)
+
+    # Draw the Grid row by row
+    for u in range(1, 11):
+        col1, col2 = st.columns([1.5, 4])
+        
+        with col1:
+            st.markdown(f"<div style='padding-top: 10px;'><b>Unit {u}</b><br><span style='font-size: 12px; color: gray;'>{unit_titles[u]}</span></div>", unsafe_allow_html=True)
+            
+        with col2:
+            unit_qs = q_by_unit[u]
+            if not unit_qs:
+                st.markdown("<div style='padding-top: 10px; color: #A0A0A0; font-size: 14px;'>This unit does not include saved questions.</div>", unsafe_allow_html=True)
+            else:
+                # Chunk buttons into rows of 6 so it looks like a clean grid
+                chunk_size = 6
+                for i in range(0, len(unit_qs), chunk_size):
+                    chunk = unit_qs[i:i+chunk_size]
+                    # Create exactly 6 columns so the buttons stay small/square
+                    b_cols = st.columns(chunk_size) 
+                    for j, q in enumerate(chunk):
+                        with b_cols[j]:
+                            if st.button(f"⭐ {i+j+1}", key=f"vq_{q['question_id']}", use_container_width=True):
+                                st.session_state.reviewing_q_id = q['question_id']
+                                st.rerun()
+        st.write("---")
 
 def login_screen():
     st.markdown("<h1 style='text-align: center; color: #0B1B3D;'>🎓 Novara Academy</h1>", unsafe_allow_html=True)
@@ -1255,7 +1359,8 @@ else:
             start_quiz()
             
         if st.button("⭐ Saved Questions", use_container_width=True, type="primary"):
-            start_saved_quiz()
+            st.session_state.current_screen = "vault"
+            st.rerun()
             
         if st.button("📊 View Analytics", use_container_width=True, type="primary"):
             st.session_state.current_screen = "analytics"
@@ -1283,3 +1388,5 @@ else:
         analytics_screen()
     elif st.session_state.current_screen == "admin_dashboard":
         admin_dashboard_screen()
+    elif st.session_state.current_screen == "vault":
+        vault_screen()

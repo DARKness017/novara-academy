@@ -743,7 +743,7 @@ def remove_from_vault(q_id):
 
 # --- 5. UI Screens ---
 def vault_screen():
-    st.markdown("<h1 style='text-align: center; color: #0B1B3D;'>⭐ My Saved Questions Vault</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #0B1B3D;'><i class='fa-solid fa-star' style='color: #C09B5A;'></i> My Saved Questions Vault</h1>", unsafe_allow_html=True)
     st.write("---")
 
     # 1. Fetch saved question IDs for this user
@@ -1006,6 +1006,7 @@ def dashboard_screen():
     # --- 🚨 FIX 2: Live JavaScript Countdown Widget ---
     components.html(
     f"""
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <div style="display: flex; justify-content: space-between; font-family: 'Inter', sans-serif; margin-bottom: 5px; margin-top: 15px;">
         <div style="background: linear-gradient(135deg, #0B1B3D 0%, #152A55 100%); border: 1px solid #C09B5A; border-radius: 16px; padding: 22px; width: 48%; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.15); box-sizing: border-box; transition: transform 0.3s ease;">
             <h4 style="color: #E2E8F0; margin-top: 0; margin-bottom: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-hourglass-half" style="color: #C09B5A; margin-right: 5px;"></i> AP Calc Exam</h4>
@@ -1024,7 +1025,7 @@ def dashboard_screen():
 
         function updateTimer() {{
             if (total_seconds <= 0) {{
-                countdown_div.innerText = "🎉 Exam Day!";
+                countdown_div.innerHTML = "<i class='fa-solid fa-champagne-glasses' style='color:#C09B5A;'></i> Exam Day!";
                 clearInterval(timer);
                 return;
             }}
@@ -1243,7 +1244,7 @@ def unit_detail_screen():
         
     st.write("---")
     
-    with st.expander("View Unit Formulas & Cheat Sheets (Click to Expand)"):
+    with st.expander("📚 View Unit Formulas & Cheat Sheets (Click to Expand)"):
         st.markdown(CHEAT_SHEETS.get(unit_num, "*Add your custom formulas for this unit here!*"), unsafe_allow_html=True)
 
 def quiz_screen():

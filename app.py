@@ -17,8 +17,9 @@ st.set_page_config(page_title="Novara Academy - Adaptive Engine", page_icon="�
 # --- Custom CSS Styling ---
 st.markdown("""
     <style>
-    /* --- 0. IMPORT PREMIUM FONT --- */
+    /* --- 0. IMPORT PREMIUM FONT & ICONS --- */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
     
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif !important;
@@ -1007,12 +1008,12 @@ def dashboard_screen():
     f"""
     <div style="display: flex; justify-content: space-between; font-family: 'Inter', sans-serif; margin-bottom: 5px; margin-top: 15px;">
         <div style="background: linear-gradient(135deg, #0B1B3D 0%, #152A55 100%); border: 1px solid #C09B5A; border-radius: 16px; padding: 22px; width: 48%; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.15); box-sizing: border-box; transition: transform 0.3s ease;">
-            <h4 style="color: #E2E8F0; margin-top: 0; margin-bottom: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">⏱️ AP Calc Exam</h4>
+            <h4 style="color: #E2E8F0; margin-top: 0; margin-bottom: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-hourglass-half" style="color: #C09B5A; margin-right: 5px;"></i> AP Calc Exam</h4>
             <h1 id="countdown" style="color: #C09B5A; margin: 0; font-size: 26px; font-weight: 800;"></h1>
             <p style="color: #A0A0A0; margin: 8px 0 0 0; font-size: 12px;">Time Left (May 10)</p>
         </div>
         <div style="background: linear-gradient(135deg, #0B1B3D 0%, #152A55 100%); border: 1px solid #C09B5A; border-radius: 16px; padding: 22px; width: 48%; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.15); box-sizing: border-box; transition: transform 0.3s ease;">
-            <h4 style="color: #E2E8F0; margin-top: 0; margin-bottom: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">🔥 Daily Streak</h4>
+            <h4 style="color: #E2E8F0; margin-top: 0; margin-bottom: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-fire" style="color: #C09B5A; margin-right: 5px;"></i> Daily Streak</h4>
             <h1 style="color: #C09B5A; margin: 0; font-size: 36px; font-weight: 800;">{streak}</h1>
             <p style="color: #A0A0A0; margin: 8px 0 0 0; font-size: 12px;">Consecutive Days</p>
         </div>
@@ -1483,37 +1484,36 @@ if not st.session_state.logged_in:
     login_screen()
 else:
     with st.sidebar:
-        st.markdown("<h2 style='text-align: center; color: white;'>🎓 Novara Profile</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; color: white;'><i class='fa-solid fa-user-graduate' style='color: #C09B5A;'></i> Novara Profile</h2>", unsafe_allow_html=True)
         
         response = supabase.table("attempts").select("is_correct").eq("user_id", st.session_state.user_id).execute()
         total_score = sum([1 for item in response.data if item['is_correct'] == 1]) if response.data else 0
         
-        st.markdown(f"<div style='text-align: center; color: #C09B5A; font-size: 18px; margin-bottom: 20px;'><b>👤 {st.session_state.username}</b><br>⭐ Total XP: {total_score}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align: center; color: #C09B5A; font-size: 18px; margin-bottom: 20px;'><b><i class='fa-solid fa-user'></i> {st.session_state.username}</b><br><i class='fa-solid fa-star'></i> Total XP: {total_score}</div>", unsafe_allow_html=True)
         
-        if st.button("🏠 Home", use_container_width=True, type="primary"):
+        if st.button("Home", use_container_width=True, type="primary"):
             st.session_state.current_screen = "dashboard"
             st.rerun()
             
-        if st.button("🚀 Start Full Adaptive Quiz", use_container_width=True, type="primary"):
+        if st.button("Start Full Adaptive Quiz", use_container_width=True, type="primary"):
             start_quiz()
             
-        if st.button("⭐ Saved Questions", use_container_width=True, type="primary"):
+        if st.button("Saved Questions", use_container_width=True, type="primary"):
             st.session_state.current_screen = "vault"
             st.rerun()
             
-        if st.button("📊 View Analytics", use_container_width=True, type="primary"):
+        if st.button("View Analytics", use_container_width=True, type="primary"):
             st.session_state.current_screen = "analytics"
             st.rerun()
             
-        # Secure database-level Admin check
         if st.session_state.get("is_admin", False):
             st.write("---")
-            if st.button("👑 Admin", use_container_width=True, type="primary"):
+            if st.button("Admin Dashboard", use_container_width=True, type="primary"):
                 st.session_state.current_screen = "admin_dashboard"
                 st.rerun()
             
         st.write("---")
-        if st.button("↩️ Log Out", use_container_width=True, type="primary"):
+        if st.button("Log Out", use_container_width=True, type="primary"):
             st.session_state.clear()
             st.rerun()
 

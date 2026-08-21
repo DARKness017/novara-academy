@@ -791,7 +791,7 @@ def vault_screen():
             st.write("---")
             correct_letter = q['correct_option']
             correct_text = q[f"option_{correct_letter.lower()}"]
-            st.markdown(f"<div style='background-color: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; padding: 14px; border-radius: 8px; color: #22c55e; margin-bottom: 15px;'><b>✅ Correct Answer:</b> {correct_letter}) {correct_text}</div>", unsafe_allow_html=True)
+            st.markdown(f"<span style='display: block; background-color: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; padding: 14px; border-radius: 8px; color: #22c55e; margin-bottom: 15px;'><b>✅ Correct Answer:</b> {correct_letter}) {correct_text}</span>", unsafe_allow_html=True)
             
             if st.button("Remove from Vault", type="primary"):
                 supabase.table("saved_questions").delete().eq("user_id", st.session_state.user_id).eq("question_id", q['question_id']).execute()
@@ -1069,7 +1069,7 @@ def dashboard_screen():
             text_color = "#0B1B3D" if is_mastered else "#A0A0A0"
             border_style = "2px solid #C09B5A" if is_mastered else "1px solid #334155"
             
-            icon = "&#x1F3C6;" if is_mastered else "&#x1F512;"
+            icon = "<i class='fa-solid fa-trophy'></i>" if is_mastered else "<i class='fa-solid fa-lock'></i>"
             icon_color = "#0B1B3D" if is_mastered else "#A0A0A0"
             
             with cols[idx]:
@@ -1262,9 +1262,9 @@ def quiz_screen():
             st.markdown(f"**Q{i+1}:** {ans['question']}")
             
             if ans['is_correct']:
-                st.markdown(f"<div style='background-color: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; padding: 14px; border-radius: 8px; color: #22c55e; margin-bottom: 12px;'><b>✅ Correct:</b> {ans['selected']}) {ans['selected_text']}</div>", unsafe_allow_html=True)
+                st.markdown(f"<span style='display: block; background-color: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; padding: 14px; border-radius: 8px; color: #22c55e; margin-bottom: 12px;'><b>✅ Correct:</b> {ans['selected']}) {ans['selected_text']}</span>", unsafe_allow_html=True)
             else:
-                st.markdown(f"<div style='background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 12px;'><b>❌ Incorrect:</b> You chose {ans['selected']}) {ans['selected_text']}<br><br><i class='fa-solid fa-lightbulb' style='color: #eab308;'></i> <b style='color: #eab308;'>Right Answer:</b> <span style='color: #eab308;'>{ans['correct']}) {ans['correct_text']}</span></div>", unsafe_allow_html=True)
+                st.markdown(f"<span style='display: block; background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 12px;'><b>❌ Incorrect:</b> You chose {ans['selected']}) {ans['selected_text']}<br><br><i class='fa-solid fa-lightbulb' style='color: #eab308;'></i> <b style='color: #eab308;'>Right Answer:</b> <span style='color: #eab308;'>{ans['correct']}) {ans['correct_text']}</span></span>", unsafe_allow_html=True)
             
             # --- 2. DYNAMICALLY SHOW ONLY ONE BUTTON ---
             if ans['question_id'] in saved_q_ids:

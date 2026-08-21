@@ -67,7 +67,7 @@ st.markdown("""
     }
 
     /* --- 4. NOVARA ACADEMY ANIMATED BUTTONS --- */
-    .stButton > button {
+    .stButton > button, [data-testid="stFormSubmitButton"] > button {
         background-color: #0B1B3D !important;
         color: white !important;
         border-radius: 10px !important;
@@ -78,26 +78,26 @@ st.markdown("""
         transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
         box-shadow: 0 4px 10px rgba(11, 27, 61, 0.12) !important;
     }
-    .stButton > button:hover {
+    .stButton > button:hover, [data-testid="stFormSubmitButton"] > button:hover {
         background-color: #C09B5A !important;
         color: #0B1B3D !important;
         border: 1px solid #0B1B3D !important;
         transform: translateY(-2px) !important;
         box-shadow: 0 8px 18px rgba(192, 155, 90, 0.35) !important;
     }
-    .stButton > button:active {
+    .stButton > button:active, [data-testid="stFormSubmitButton"] > button:active {
         transform: translateY(1px) !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
     }
     
-    .stButton > button[kind="primary"] {
+    .stButton > button[kind="primary"], [data-testid="stFormSubmitButton"] > button[kind="primary"] {
         background: linear-gradient(135deg, #C09B5A 0%, #B08B4A 100%) !important;
         color: #0B1B3D !important;
         border-radius: 10px !important;
         border: 1px solid #0B1B3D !important;
         font-weight: 700;
     }
-    .stButton > button[kind="primary"]:hover {
+    .stButton > button[kind="primary"]:hover, [data-testid="stFormSubmitButton"] > button[kind="primary"]:hover {
         background: #0B1B3D !important;
         color: #FFFFFF !important;
         border: 1px solid #C09B5A !important; 
@@ -179,6 +179,9 @@ st.markdown("""
         box-shadow: 0 4px 8px rgba(11, 27, 61, 0.03) !important;
         transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
         cursor: pointer !important;
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
     }
     div[role="radiogroup"] > label:hover {
         border: 1.5px solid #C09B5A !important; 
@@ -1332,28 +1335,28 @@ def quiz_screen():
             "Answer", 
             ["A", "B", "C", "D"], 
             index=radio_index,
-            format_func=lambda x: f"{x}) {options[x]}",
+            format_func=lambda x: f"**{x})** {options[x]}", # ADDED MARKDOWN BOLDING HERE
             label_visibility="collapsed"
         )
         
         st.write("") # Extra padding
         
-        # 4 Columns: [Quit] [Spacer] [Back] [Next]
-        c1, c_space, c2, c3 = st.columns([1.5, 4, 1.5, 1.5])
+        # We shrink the spacer and widen the buttons
+        c1, c_space, c2, c3 = st.columns([2, 3, 2, 2])
         
         with c1:
-            quit_btn = st.form_submit_button("Quit Quiz")
+            quit_btn = st.form_submit_button("Quit Quiz", use_container_width=True)
             
         with c2:
             # Disable the Back button if we are on the very first question
             back_disabled = (st.session_state.current_q_index == 0)
-            back_btn = st.form_submit_button("Back", disabled=back_disabled)
+            back_btn = st.form_submit_button("Back", disabled=back_disabled, use_container_width=True)
             
         with c3:
             # If we are on the last question, change "Next" to "Submit"
             is_last = (st.session_state.current_q_index == len(st.session_state.quiz_questions) - 1)
             next_text = "Submit" if is_last else "Next"
-            next_btn = st.form_submit_button(next_text, type="primary")
+            next_btn = st.form_submit_button(next_text, type="primary", use_container_width=True)
 
         # --- Routing Logic ---
         if quit_btn:

@@ -420,6 +420,8 @@ if 'reviewing_q_id' not in st.session_state:
     st.session_state.reviewing_q_id = None
 if 'auth_mode' not in st.session_state:
     st.session_state.auth_mode = 'login'
+if 'current_answers' not in st.session_state:
+    st.session_state.current_answers = {}
 
 # --- 4. Core Application Logic ---
 def start_quiz(unit=None):
@@ -482,6 +484,7 @@ def start_quiz(unit=None):
     st.session_state.current_q_index = 0
     st.session_state.quiz_score = 0
     st.session_state.user_answers = []
+    st.session_state.current_answers = {}
     st.session_state.quiz_started = True
     st.session_state.q_start_time = time.time()
     st.session_state.current_screen = "quiz"
@@ -513,36 +516,48 @@ def start_saved_quiz():
     st.session_state.current_screen = "quiz"
     st.rerun()
 
-def submit_answer(selected_option):
+def submit_entire_quiz():
     end_time = time.time()
-    time_taken = int(end_time - st.session_state.q_start_time)
+    total_time = int(end_time - st.session_state.q_start_time)
+    # Average the time taken across all questions for the analytics engine
+    avg_time = max(1, total_time // len(st.session_state.quiz_questions))
     
-    current_q = st.session_state.quiz_questions[st.session_state.current_q_index]
-    is_correct = 1 if selected_option == current_q['correct_option'] else 0
-    
-    if is_correct:
-        st.session_state.quiz_score += 1
+    st.session_state.quiz_score = 0
+    st.session_state.user_answers = []
+    attempts_batch = []
 
-    st.session_state.user_answers.append({
-        'question_id': current_q['question_id'],
-        'question': current_q['question_text'],
-        'selected': selected_option,
-        'selected_text': current_q[f"option_{selected_option.lower()}"],
-        'correct': current_q['correct_option'],
-        'correct_text': current_q[f"option_{current_q['correct_option'].lower()}"],
-        'is_correct': is_correct
-    })
+    for idx, q in enumerate(st.session_state.quiz_questions):
+        # Retrieve their saved answer, or default to "A" if they skipped it
+        selected_option = st.session_state.current_answers.get(idx, "A")
+        is_correct = 1 if selected_option == q['correct_option'] else 0
+        
+        if is_correct:
+            st.session_state.quiz_score += 1
 
-    supabase.table("attempts").insert({
-        "user_id": st.session_state.user_id,
-        "question_id": current_q['question_id'],
-        "selected_option": selected_option,
-        "is_correct": is_correct,
-        "time_taken_seconds": time_taken
-    }).execute()
+        st.session_state.user_answers.append({
+            'question_id': q['question_id'],
+            'question': q['question_text'],
+            'selected': selected_option,
+            'selected_text': q[f"option_{selected_option.lower()}"],
+            'correct': q['correct_option'],
+            'correct_text': q[f"option_{q['correct_option'].lower()}"],
+            'is_correct': is_correct
+        })
+
+        attempts_batch.append({
+            "user_id": st.session_state.user_id,
+            "question_id": q['question_id'],
+            "selected_option": selected_option,
+            "is_correct": is_correct,
+            "time_taken_seconds": avg_time
+        })
+
+    # Bulk insert all attempts into Supabase for maximum speed
+    if attempts_batch:
+        supabase.table("attempts").insert(attempts_batch).execute()
     
-    st.session_state.current_q_index += 1
-    st.session_state.q_start_time = time.time()
+    # Push the user to the Quiz Review screen
+    st.session_state.current_q_index = len(st.session_state.quiz_questions)
     st.rerun()
 
 def save_to_vault(q_id):
@@ -903,7 +918,8 @@ def dashboard_screen():
     now = datetime.now(tz)
     total_seconds = int((exam_datetime - now).total_seconds())
     
-    today = date.today()
+    # Force the streak to calculate based on Tashkent midnight, not server UTC
+    today = datetime.now(tz).date()
     streak = 0
     unit_accuracies = {}
     
@@ -1105,8 +1121,9 @@ def dashboard_screen():
             df_lb['timestamp'] = pd.to_datetime(df_lb['timestamp'], errors='coerce')
             df_lb = df_lb[df_lb['is_correct'] == 1] # Only count correct answers (XP)
             
-            curr_month = datetime.now().month
-            curr_year = datetime.now().year
+            # Force the monthly leaderboard to reset based on Tashkent time
+            curr_month = datetime.now(tz).month
+            curr_year = datetime.now(tz).year
             
             # --- Monthly Data ---
             df_monthly = df_lb[(df_lb['timestamp'].dt.month == curr_month) & (df_lb['timestamp'].dt.year == curr_year)]
@@ -1303,11 +1320,62 @@ def quiz_screen():
         "D": q['option_d']
     }
     
-    with st.form(key="quiz_form"):
-        choice_label = st.radio("Select your answer:", ["A", "B", "C", "D"], format_func=lambda x: f"{x}) {options[x]}")
-        submit = st.form_submit_button("Submit Answer", type="primary")
-        if submit:
-            submit_answer(choice_label)
+    # Remember previously selected answers if the student goes backwards
+    saved_ans = st.session_state.current_answers.get(st.session_state.current_q_index, "A")
+    radio_index = ["A", "B", "C", "D"].index(saved_ans)
+    
+    # Dynamically generate the form key so it updates properly on navigation
+    with st.form(key=f"quiz_form_{st.session_state.current_q_index}"):
+        
+        # label_visibility="collapsed" entirely removes the "Select your answer:" text!
+        choice_label = st.radio(
+            "Answer", 
+            ["A", "B", "C", "D"], 
+            index=radio_index,
+            format_func=lambda x: f"{x}) {options[x]}",
+            label_visibility="collapsed"
+        )
+        
+        st.write("") # Extra padding
+        
+        # 4 Columns: [Quit] [Spacer] [Back] [Next]
+        c1, c_space, c2, c3 = st.columns([1.5, 4, 1.5, 1.5])
+        
+        with c1:
+            quit_btn = st.form_submit_button("Quit Quiz")
+            
+        with c2:
+            # Disable the Back button if we are on the very first question
+            back_disabled = (st.session_state.current_q_index == 0)
+            back_btn = st.form_submit_button("Back", disabled=back_disabled)
+            
+        with c3:
+            # If we are on the last question, change "Next" to "Submit"
+            is_last = (st.session_state.current_q_index == len(st.session_state.quiz_questions) - 1)
+            next_text = "Submit" if is_last else "Next"
+            next_btn = st.form_submit_button(next_text, type="primary")
+
+        # --- Routing Logic ---
+        if quit_btn:
+            st.session_state.quiz_started = False
+            st.session_state.current_screen = "dashboard"
+            st.rerun()
+            
+        elif back_btn:
+            # Save current answer, move index back 1
+            st.session_state.current_answers[st.session_state.current_q_index] = choice_label
+            st.session_state.current_q_index -= 1
+            st.rerun()
+            
+        elif next_btn:
+            # Save current answer
+            st.session_state.current_answers[st.session_state.current_q_index] = choice_label
+            if is_last:
+                submit_entire_quiz()
+            else:
+                # Move index forward 1
+                st.session_state.current_q_index += 1
+                st.rerun()
 
 def analytics_screen():
     st.markdown("<h1 style='text-align: center; color: #0B1B3D;'><i class='fa-solid fa-chart-line' style='color: #C09B5A;'></i> Performance Analytics</h1>", unsafe_allow_html=True)

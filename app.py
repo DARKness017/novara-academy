@@ -795,7 +795,7 @@ def login_screen():
             
             reg_username = st.text_input("Full Name", key="reg_username")
             reg_email = st.text_input("Email Address", key="reg_email")
-            reg_password = st.text_input("Password (min. 8 chars)", type="password", key="reg_password")
+            reg_password = st.text_input("Password", type="password", key="reg_password")
             
             st.write("")
             if st.button("Sign Up", type="primary", use_container_width=True):
@@ -838,6 +838,57 @@ def login_screen():
             if st.button("Sign In", use_container_width=True):
                 st.session_state.auth_mode = 'login'
                 st.rerun()
+
+    # --- MINIMALIST SOCIAL MEDIA & LEGAL FOOTER ---
+    st.write("---")
+    st.markdown("""
+    <style>
+    .social-icon {
+        width: 32px;
+        height: 32px;
+        margin: 0 20px;
+        transition: transform 0.2s ease-in-out, opacity 0.2s;
+        opacity: 0.65;
+    }
+    .social-icon:hover {
+        transform: scale(1.15);
+        opacity: 1;
+    }
+    .social-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 15px;
+        margin-bottom: 15px;
+    }
+    .legal-footer {
+        text-align: center;
+        color: #A0A0A0;
+        font-size: 12px;
+        font-family: sans-serif;
+        padding-bottom: 30px;
+        line-height: 1.5;
+    }
+    </style>
+    
+    <div class="social-container">
+        <a href='https://t.me/Novara_Academy' target='_blank'>
+            <img class="social-icon" src='https://cdn.simpleicons.org/telegram/0B1B3D' alt='Telegram'/>
+        </a>
+        <a href='https://www.instagram.com/thenovaraacademy' target='_blank'>
+            <img class="social-icon" src='https://cdn.simpleicons.org/instagram/0B1B3D' alt='Instagram'/>
+        </a>
+        <a href='https://youtube.com/@thenovara_academy' target='_blank'>
+            <img class="social-icon" src='https://cdn.simpleicons.org/youtube/0B1B3D' alt='YouTube'/>
+        </a>
+    </div>
+    
+    <div class="legal-footer">
+        &copy; 2026 Novara Academy. All rights reserved.<br>
+        Designed & Engineered in Uzbekistan.<br>
+        <span style="font-size: 10px; opacity: 0.7;">For educational purposes only. Not affiliated with the College Board.</span>
+    </div>
+    """, unsafe_allow_html=True)
 
 def dashboard_screen():
     st.markdown(f"<h1 style='text-align: center; color: #0B1B3D;'>Welcome, {st.session_state.username}!</h1>", unsafe_allow_html=True)

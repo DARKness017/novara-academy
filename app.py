@@ -742,6 +742,10 @@ def login_screen():
             
             st.write("")
             if st.button("Sign In", type="primary", use_container_width=True):
+                # Reset attempts if the penalty time has officially expired
+                if st.session_state.failed_attempts >= 5 and time.time() > st.session_state.lockout_until:
+                    st.session_state.failed_attempts = 0
+                
                 if time.time() < st.session_state.lockout_until:
                     remaining_seconds = int(st.session_state.lockout_until - time.time())
                     st.markdown(f"<div style='background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 15px;'><i class='fa-solid fa-lock'></i> <b>Account temporarily locked.</b> Try again in {remaining_seconds} seconds.</div>", unsafe_allow_html=True)
@@ -1262,8 +1266,8 @@ def quiz_screen():
     elapsed = int(time.time() - st.session_state.q_start_time)
     components.html(
         f"""
-        <div style="font-family: sans-serif; text-align: right; color: #0B1B3D; font-size: 18px; font-weight: bold; margin: 0; padding-right: 10px;">
-            ⏱️ Time Elapsed: <span id="clock"></span>
+        <div style="font-family: 'Inter', sans-serif; text-align: right; color: #0B1B3D; font-size: 18px; font-weight: bold; margin: 0; padding-right: 10px;">
+            <i class="fa-solid fa-stopwatch" style="color: #0B1B3D;"></i> Time Elapsed: <span id="clock"></span>
         </div>
         <script>
             let time_elapsed = {elapsed};
@@ -1376,7 +1380,7 @@ def analytics_screen():
             # Feedback logic
             if slow_units:
                 sorted_slow = sorted(list(slow_units))
-                st.warning(f"⏱️ **Speed Improvement Needed:** You have correct answers that took longer than 90 seconds in **Units: {', '.join(map(str, sorted_slow))}**. The AP exam requires faster pacing here!")
+                st.markdown(f"<div style='background-color: rgba(234, 179, 8, 0.1); border: 1px solid #eab308; padding: 14px; border-radius: 8px; color: #eab308; margin-top: 15px;'><i class='fa-solid fa-stopwatch'></i> <b>Speed Improvement Needed:</b> You have correct answers that took longer than 90 seconds in <b>Units: {', '.join(map(str, sorted_slow))}</b>. The AP exam requires faster pacing here!</div>", unsafe_allow_html=True)
         else:
             st.info("No unit data found for your attempts.")
     else:

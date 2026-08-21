@@ -17,6 +17,13 @@ st.set_page_config(page_title="Novara Academy - Adaptive Engine", page_icon="�
 # --- Custom CSS Styling ---
 st.markdown("""
     <style>
+    /* --- 0. IMPORT PREMIUM FONT --- */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif !important;
+    }
+
     /* --- 1. AGGRESSIVELY REMOVE ALL STREAMLIT BRANDING --- */
     #MainMenu {visibility: hidden;}
     header {visibility: hidden;}
@@ -33,18 +40,26 @@ st.markdown("""
         padding-bottom: 0rem !important;
     }
 
-    /* --- 2. NOVARA ACADEMY BUTTON STYLING --- */
+    /* --- 2. NOVARA ACADEMY ANIMATED BUTTONS --- */
     .stButton > button {
         background-color: #0B1B3D !important;
         color: white !important;
         border-radius: 8px !important;
         border: 1px solid #C09B5A !important;
         font-weight: 500;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
     }
     .stButton > button:hover {
         background-color: #C09B5A !important;
         color: #0B1B3D !important;
         border: 1px solid #0B1B3D !important;
+        transform: translateY(-2px) !important; /* Floats up slightly */
+        box-shadow: 0 6px 12px rgba(192, 155, 90, 0.3) !important; /* Soft Gold Glow */
+    }
+    .stButton > button:active {
+        transform: translateY(1px) !important; /* Physical button press effect */
+        box-shadow: 0 2px 3px rgba(0,0,0,0.1) !important;
     }
     
     .stButton > button[kind="primary"] {
@@ -58,9 +73,15 @@ st.markdown("""
         background-color: #0B1B3D !important;
         color: white !important;
         border: 1px solid #C09B5A !important; 
+        box-shadow: 0 6px 12px rgba(11, 27, 61, 0.3) !important; /* Soft Navy Glow */
     }
 
-    /* --- 3. NATIVE MARKDOWN TABLE STYLING --- */
+    /* --- 3. CUSTOM GOLD PROGRESS BAR --- */
+    [data-testid="stProgress"] > div > div > div > div {
+        background-color: #C09B5A !important;
+    }
+
+    /* --- 4. NATIVE MARKDOWN TABLE STYLING --- */
     .stMarkdown table {
         background-color: #0B1B3D !important;
         border: 2px solid #C09B5A !important;
@@ -70,7 +91,7 @@ st.markdown("""
         color: white !important;
         width: 100% !important;
         margin-top: -10px !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.15) !important; /* Deepened shadow */
     }
     .stMarkdown th { display: none !important; }
     .stMarkdown td {
@@ -89,7 +110,7 @@ st.markdown("""
         width: 28% !important;
     }
 
-    /* --- 4. SAAS SIDEBAR STYLING --- */
+    /* --- 5. SAAS SIDEBAR STYLING --- */
     [data-testid="stSidebar"] {
         background-color: #0B1B3D !important;
         border-right: 2px solid #C09B5A !important;
@@ -98,7 +119,7 @@ st.markdown("""
         border-bottom: 1px solid #C09B5A !important;
     }
 
-    /* --- 5. PREMIUM QUIZ OPTION CARDS --- */
+    /* --- 6. PREMIUM QUIZ OPTION CARDS --- */
     div[role="radiogroup"] {
         gap: 15px !important; 
     }
@@ -108,14 +129,14 @@ st.markdown("""
         border-radius: 12px !important;
         padding: 15px 20px !important; 
         box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
-        transition: all 0.2s ease-in-out !important;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
         cursor: pointer !important;
     }
     div[role="radiogroup"] > label:hover {
         border: 2px solid #C09B5A !important; 
         background-color: #F8FAFC !important; 
-        transform: translateY(-3px) !important; 
-        box-shadow: 0 8px 12px rgba(0,0,0,0.1) !important; 
+        transform: translateY(-4px) !important; /* Float up */
+        box-shadow: 0 12px 20px rgba(192, 155, 90, 0.15) !important; /* Premium gold shadow */
     }
     </style>
 """, unsafe_allow_html=True)
@@ -942,16 +963,16 @@ def dashboard_screen():
     # --- 🚨 FIX 2: Live JavaScript Countdown Widget ---
     components.html(
     f"""
-    <div style="display: flex; justify-content: space-between; font-family: sans-serif; margin-bottom: 5px; margin-top: 15px;">
-        <div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-radius: 12px; padding: 18px; width: 48%; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); box-sizing: border-box;">
-            <h4 style="color: white; margin-top: 0; margin-bottom: 8px; font-size: 15px;">⏱️ AP Calc Exam</h4>
-            <h1 id="countdown" style="color: #C09B5A; margin: 0; font-size: 24px;"></h1>
-            <p style="color: white; margin: 8px 0 0 0; font-size: 13px;">Time Left (May 10)</p>
+    <div style="display: flex; justify-content: space-between; font-family: 'Inter', sans-serif; margin-bottom: 5px; margin-top: 15px;">
+        <div style="background: linear-gradient(135deg, #0B1B3D 0%, #152A55 100%); border: 1px solid #C09B5A; border-radius: 16px; padding: 22px; width: 48%; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.15); box-sizing: border-box; transition: transform 0.3s ease;">
+            <h4 style="color: #E2E8F0; margin-top: 0; margin-bottom: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">⏱️ AP Calc Exam</h4>
+            <h1 id="countdown" style="color: #C09B5A; margin: 0; font-size: 26px; font-weight: 800;"></h1>
+            <p style="color: #A0A0A0; margin: 8px 0 0 0; font-size: 12px;">Time Left (May 10)</p>
         </div>
-        <div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-radius: 12px; padding: 18px; width: 48%; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); box-sizing: border-box;">
-            <h4 style="color: white; margin-top: 0; margin-bottom: 8px; font-size: 15px;">🔥 Daily Streak</h4>
-            <h1 style="color: #C09B5A; margin: 0; font-size: 34px;">{streak}</h1>
-            <p style="color: white; margin: 8px 0 0 0; font-size: 13px;">Consecutive Days</p>
+        <div style="background: linear-gradient(135deg, #0B1B3D 0%, #152A55 100%); border: 1px solid #C09B5A; border-radius: 16px; padding: 22px; width: 48%; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.15); box-sizing: border-box; transition: transform 0.3s ease;">
+            <h4 style="color: #E2E8F0; margin-top: 0; margin-bottom: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">🔥 Daily Streak</h4>
+            <h1 style="color: #C09B5A; margin: 0; font-size: 36px; font-weight: 800;">{streak}</h1>
+            <p style="color: #A0A0A0; margin: 8px 0 0 0; font-size: 12px;">Consecutive Days</p>
         </div>
     </div>
     <script>
@@ -983,7 +1004,7 @@ def dashboard_screen():
         updateTimer(); 
     </script>
     """,
-    height=170
+    height=180
     )
     
     # --- 2. 🏆 TROPHY CASE (MASTERY BADGES) ---
@@ -1300,7 +1321,7 @@ def analytics_screen():
             # ==========================================
             # 🕸️ SKILL RADAR CHART (SPIDER WEB)
             # ==========================================
-            st.markdown("<h3 style='color: #0B1B3D;'>🕸️ Your Mastery Radar</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='color: #0B1B3D;'>Your Mastery Radar</h3>", unsafe_allow_html=True)
             
             # 1. Map all 10 units (fill with 0 if unattempted)
             all_units = [f"U{i}" for i in range(1, 11)]

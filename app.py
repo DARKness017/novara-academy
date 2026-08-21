@@ -1224,7 +1224,7 @@ def unit_detail_screen():
     st.markdown(f"<h1 style='text-align: center; color: #0B1B3D;'>{unit_name}</h1>", unsafe_allow_html=True)
     st.write("---")
     
-    st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>Select Difficulty Level</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; color: #0B1B3D;'><i class='fa-solid fa-sliders' style='color: #C09B5A;'></i> Select Difficulty Level</h3>", unsafe_allow_html=True)
     diff_col1, diff_col2, diff_col3, diff_col4 = st.columns(4)
     with diff_col1:
         if st.button("🌐 All", use_container_width=True): st.session_state.difficulty = "All"
@@ -1243,17 +1243,17 @@ def unit_detail_screen():
         
     st.write("---")
     
-    with st.expander("📚 View Unit Formulas & Cheat Sheets (Click to Expand)"):
+    with st.expander("View Unit Formulas & Cheat Sheets (Click to Expand)"):
         st.markdown(CHEAT_SHEETS.get(unit_num, "*Add your custom formulas for this unit here!*"), unsafe_allow_html=True)
 
 def quiz_screen():
     # --- POST-QUIZ REVIEW SCREEN ---
     if st.session_state.current_q_index >= len(st.session_state.quiz_questions):
-        st.markdown("<h2 style='text-align: center; color: #0B1B3D;'>Quiz Complete! 🎉</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; color: #0B1B3D;'><i class='fa-solid fa-flag-checkered' style='color: #C09B5A;'></i> Quiz Complete!</h2>", unsafe_allow_html=True)
         st.markdown(f"<h3 style='text-align: center; color: #C09B5A;'>Your Score: {st.session_state.quiz_score} / {len(st.session_state.quiz_questions)}</h3>", unsafe_allow_html=True)
         st.write("---")
         
-        st.markdown("<h3 style='color: #0B1B3D;'>Question Review</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color: #0B1B3D;'><i class='fa-solid fa-magnifying-glass' style='color: #C09B5A;'></i> Question Review</h3>", unsafe_allow_html=True)
         
         # --- 1. QUICKLY FETCH THE STUDENT'S VAULT FIRST ---
         vault_response = supabase.table("saved_questions").select("question_id").eq("user_id", st.session_state.user_id).execute()
@@ -1337,7 +1337,7 @@ def quiz_screen():
             submit_answer(choice_label)
 
 def analytics_screen():
-    st.markdown("<h1 style='text-align: center; color: #0B1B3D;'>📊 Performance Analytics</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #0B1B3D;'><i class='fa-solid fa-chart-line' style='color: #C09B5A;'></i> Performance Analytics</h1>", unsafe_allow_html=True)
     
     response = supabase.table("attempts").select("is_correct, time_taken_seconds, question_id").eq("user_id", st.session_state.user_id).execute()
     data = response.data

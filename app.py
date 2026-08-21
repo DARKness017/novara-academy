@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import time
 import bcrypt
 import matplotlib.pyplot as plt
@@ -1048,6 +1049,52 @@ def dashboard_screen():
                 st.session_state.current_screen = "unit_detail"
                 st.rerun()
 
+    # --- 4. 🌍 GLOBAL LEADERBOARD (Monthly & All-Time) ---
+    st.write("---")
+    st.markdown("<h3 style='text-align: center; color: #0B1B3D;'>🌍 Global Leaderboard</h3>", unsafe_allow_html=True)
+    
+    # Fetch Leaderboard Data
+    lb_users_res = supabase.table("users").select("user_id, username").execute()
+    lb_users_dict = {u['user_id']: u['username'] for u in lb_users_res.data} if lb_users_res.data else {}
+    
+    lb_attempts_res = supabase.table("attempts").select("user_id, is_correct, timestamp").execute()
+    
+    if lb_attempts_res.data:
+        df_lb = pd.DataFrame(lb_attempts_res.data)
+        if not df_lb.empty and 'timestamp' in df_lb.columns:
+            # Clean and filter the data
+            df_lb['timestamp'] = pd.to_datetime(df_lb['timestamp'], errors='coerce')
+            df_lb = df_lb[df_lb['is_correct'] == 1] # Only count correct answers (XP)
+            
+            curr_month = datetime.now().month
+            curr_year = datetime.now().year
+            
+            # --- Monthly Data ---
+            df_monthly = df_lb[(df_lb['timestamp'].dt.month == curr_month) & (df_lb['timestamp'].dt.year == curr_year)]
+            monthly_xp = df_monthly.groupby('user_id').size().reset_index(name='XP')
+            monthly_xp['Student'] = monthly_xp['user_id'].map(lb_users_dict)
+            monthly_xp = monthly_xp.sort_values(by='XP', ascending=False).head(10)[['Student', 'XP']]
+            monthly_xp.index = range(1, len(monthly_xp) + 1)
+            
+            # --- All-Time Data ---
+            alltime_xp = df_lb.groupby('user_id').size().reset_index(name='XP')
+            alltime_xp['Student'] = alltime_xp['user_id'].map(lb_users_dict)
+            alltime_xp = alltime_xp.sort_values(by='XP', ascending=False).head(10)[['Student', 'XP']]
+            alltime_xp.index = range(1, len(alltime_xp) + 1)
+            
+            # Display Tabs
+            tab_month, tab_alltime = st.tabs(["📅 This Month", "🏆 All-Time"])
+            with tab_month:
+                if not monthly_xp.empty:
+                    st.dataframe(monthly_xp, use_container_width=True)
+                else:
+                    st.info("No points earned yet this month! Be the first on the board.")
+            with tab_alltime:
+                if not alltime_xp.empty:
+                    st.dataframe(alltime_xp, use_container_width=True)
+                else:
+                    st.info("No points earned yet.")
+
     # --- MINIMALIST SOCIAL MEDIA & LEGAL FOOTER ---
     st.write("---")
     st.markdown("""
@@ -1248,25 +1295,52 @@ def analytics_screen():
         
         if processed:
             df = pd.DataFrame(processed)
-            # Group by the raw number so it sorts mathematically (1, 2, 3... 10)
-            summary = df.groupby('unit_num')['correct'].mean() * 100
-            # Add the word "Unit" back in for the chart labels
-            summary.index = [f"Unit {i}" for i in summary.index]
+            summary_raw = df.groupby('unit_num')['correct'].mean() * 100
             
-            fig, ax = plt.subplots(figsize=(8, 4))
-            summary.plot(kind='bar', ax=ax, color='#0B1B3D', edgecolor='#C09B5A', width=0.7)
+            # ==========================================
+            # 🕸️ SKILL RADAR CHART (SPIDER WEB)
+            # ==========================================
+            st.markdown("<h3 style='color: #0B1B3D;'>🕸️ Your Mastery Radar</h3>", unsafe_allow_html=True)
             
-            ax.set_ylabel('Accuracy (%)')
-            ax.set_ylim(0, 100)
-            ax.axhline(60, color='#C09B5A', linestyle='--', label='60% Threshold')
-            ax.legend()
+            # 1. Map all 10 units (fill with 0 if unattempted)
+            all_units = [f"U{i}" for i in range(1, 11)]
+            accuracies = []
+            for i in range(1, 11):
+                if i in summary_raw.index:
+                    accuracies.append(summary_raw[i])
+                else:
+                    accuracies.append(0)
             
-            ax.spines['top'].set_visible(False)
-            ax.spines['right'].set_visible(False)
-            plt.xticks(rotation=0)
+            # 2. Calculate angles for the radar
+            angles = np.linspace(0, 2 * np.pi, len(all_units), endpoint=False).tolist()
+            
+            # 3. Close the loop to draw a full shape
+            accuracies += [accuracies[0]]
+            angles += [angles[0]]
+            
+            # 4. Plot the beautiful chart
+            fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
+            fig.patch.set_facecolor('#0B1B3D') # Navy background
+            ax.set_facecolor('#0B1B3D')
+            
+            # Adjust grid and axes
+            plt.xticks(angles[:-1], all_units, color='white', size=12)
+            ax.set_rlabel_position(0)
+            plt.yticks([20, 40, 60, 80], ["20%", "40%", "60%", "80%"], color="#A0A0A0", size=8)
+            plt.ylim(0, 100)
+            
+            # Fill the radar
+            ax.plot(angles, accuracies, color='#C09B5A', linewidth=2.5, linestyle='solid')
+            ax.fill(angles, accuracies, color='#C09B5A', alpha=0.4)
+            
+            # Styling
+            ax.grid(color='#334155', linestyle='--', linewidth=0.8)
+            ax.spines['polar'].set_color('#C09B5A')
             
             st.pyplot(fig)
+            st.write("---")
             
+            # Feedback logic
             if slow_units:
                 sorted_slow = sorted(list(slow_units))
                 st.warning(f"⏱️ **Speed Improvement Needed:** You have correct answers that took longer than 90 seconds in **Units: {', '.join(map(str, sorted_slow))}**. The AP exam requires faster pacing here!")

@@ -209,21 +209,6 @@ CHEAT_SHEETS = {
 | **1.10–1.13**<br>Continuity & Discontinuities | $f(x)$ is continuous at $x=c$ iff:<br>**1.** $f(c)$ is defined &nbsp; **2.** $\lim_{x\to c}f(x)$ exists &nbsp; **3.** $\lim_{x\to c}f(x)=f(c)$<br><br>**Types:**<br>• **Removable:** $\lim_{x\to c}f(x)$ exists, $\neq f(c)$ (Hole)<br>• **Jump:** $\lim_{x\to c^{-}}f(x)\neq\lim_{x\to c^{+}}f(x)$ (Step break)<br>• **Infinite:** $\lim_{x\to c^{\pm}}f(x)=\pm\infty$ (Vert. asymptote)<br><br>Continuous on $(a,b)$: continuous at every point.<br>Continuous on $[a,b]$: continuous on $(a,b)$ and $\lim_{x\to a^{+}}f(x)=f(a)$, $\lim_{x\to b^{-}}f(x)=f(b)$ |
 | **1.14–1.15**<br>Limits at Infinity & Asymptotes | **Vertical:** $x=c$ is asymptote if $\lim_{x\to c^{+}}f(x)=\pm\infty$ or $\lim_{x\to c^{-}}f(x)=\pm\infty$<br>**Horizontal:** $y=L$ is asymptote if $\lim_{x\to\infty}f(x)=L$ or $\lim_{x\to-\infty}f(x)=L$<br><br>Degree of numerator $n$, denominator $m$:<br>• $n<m$ (Bottom Heavy): $\lim_{x\to\pm\infty}f(x)=0$<br>• $n=m$ (Balanced): $\lim_{x\to\pm\infty}f(x)=\frac{a}{b}$<br>• $n>m$ (Top Heavy): $\lim_{x\to\pm\infty}f(x)=\pm\infty$ |
 | **1.16**<br>Intermediate Value Thm (IVT) | **Conditions:** **1.** $f(x)$ continuous on closed $[a,b]$ &nbsp; **2.** $u$ strictly between $f(a)$ and $f(b)$, $f(a)\neq f(b)$<br>**Conclusion:** there exists at least one $c\in(a,b)$ such that $f(c)=u$ |
-
-<br><br>
-
-<div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-bottom: none; border-top-left-radius: 12px; border-top-right-radius: 12px; padding: 15px; text-align: center; color: #C09B5A;">
-    <h3 style="margin: 0; color: #C09B5A;">Unit 1: Limits & Continuity — Core Definitions</h3>
-</div>
-
-| | |
-|---|---|
-| **1.1–1.4**<br>Core Limit Concepts | **Def. Limit of a Function:** let $f(x)$ be defined on an open interval around $c$ (except possibly at $c$). We say $\lim_{x\to c}f(x)=L$ if we can make $f(x)$ arbitrarily close to $L$ by taking $x$ sufficiently close to $c$, from both sides, but not equal to $c$.<br><br>**Def. One-Sided Limits:**<br>Left-hand: $x\to c$ strictly from values $<c$: $\lim_{x\to c^{-}}f(x)$<br>Right-hand: $x\to c$ strictly from values $>c$: $\lim_{x\to c^{+}}f(x)$<br><br>**Existence Condition:** $\lim_{x\to c}f(x)$ exists iff both one-sided limits exist and are equal to the same finite value $L$: $\lim_{x\to c^{-}}f(x)=\lim_{x\to c^{+}}f(x)=L$ |
-| **Discontinuity Types** | **Jump:** left- and right-hand limits both exist as finite numbers, but are unequal: $\lim_{x\to c^{-}}f(x)\neq\lim_{x\to c^{+}}f(x)$<br><br>**Infinite:** one or both one-sided limits approach $\pm\infty$ as $x\to c$ |
-| **1.14–1.15**<br>Asymptotic Behavior | **Vertical Asymptote:** the line $x=c$ is a vertical asymptote of $f(x)$ if the output grows without bound as $x\to c$: $\lim_{x\to c^{+}}f(x)=\pm\infty$ or $\lim_{x\to c^{-}}f(x)=\pm\infty$<br><br>**Horizontal Asymptote:** the line $y=L$ is a horizontal asymptote if $f$ stabilizes toward $L$ as $x\to\pm\infty$: $\lim_{x\to\infty}f(x)=L$ or $\lim_{x\to-\infty}f(x)=L$ |
-| **1.5–1.7**<br>Indeterminate Forms | **Def. Indeterminate Form:** an algebraic expression obtained by evaluating a limit that does not provide enough information to determine the limit's actual value. The most common structural form is $\left[\frac{0}{0}\right]$. It signals the limit *may or may not* exist and requires further manipulation (factoring, conjugate rationalization, simplifying complex fractions). |
-| **1.16**<br>Existence Theorems | **Thm. Intermediate Value Theorem (IVT):** if $f$ is continuous on the closed interval $[a,b]$, and $y_0$ is any value strictly between $f(a)$ and $f(b)$, then there must exist at least one value $c\in(a,b)$ such that $f(c)=y_0$ |
-| **1.10–1.13**<br>Continuity & Discontinuity | **Def. Continuity at a Point:** $f$ is continuous at $x=c$ if it satisfies all three: **1.** $f(c)$ is defined &nbsp; **2.** $\lim_{x\to c}f(x)$ exists &nbsp; **3.** $\lim_{x\to c}f(x)=f(c)$<br><br>**Def. Removable Discontinuity:** a discontinuity at $x=c$ where $\lim_{x\to c}f(x)$ exists, but either $f(c)$ is undefined or $\lim_{x\to c}f(x)\neq f(c)$. Graphically, a single hole in the graph. |
 """,
     2: r"""
 <div style="background-color: #0B1B3D; border: 2px solid #C09B5A; border-bottom: none; border-top-left-radius: 12px; border-top-right-radius: 12px; padding: 15px; text-align: center; color: #C09B5A;">
@@ -1003,22 +988,62 @@ def dashboard_screen():
     except Exception:
         pass
 
-    # --- 🚨 FIX 2: Live JavaScript Countdown Widget ---
+    # --- 2. Dynamic Gamification Gamestate Logic ---
+    if streak == 0:
+        flame_color = "#64748B" # Slate Gray
+        flame_glow = "none"
+        streak_msg = "Start your streak!"
+        pulse_class = ""
+    elif 1 <= streak <= 2:
+        flame_color = "#FBBF24" # Yellow
+        flame_glow = "drop-shadow(0px 0px 4px rgba(251, 191, 36, 0.4))"
+        streak_msg = "Heating Up!"
+        pulse_class = ""
+    elif 3 <= streak <= 6:
+        flame_color = "#F97316" # Orange
+        flame_glow = "drop-shadow(0px 0px 8px rgba(249, 115, 22, 0.6))"
+        streak_msg = "On Fire!"
+        pulse_class = ""
+    else:
+        flame_color = "#EF4444" # Blazing Red
+        flame_glow = "drop-shadow(0px 0px 12px rgba(239, 68, 68, 0.8))"
+        streak_msg = "Unstoppable!"
+        pulse_class = "flame-pulse"
+
+    # --- 3. Live JavaScript Countdown Widget & Dynamic Streak ---
     components.html(
     f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes pulse-glow {{
+            0% {{ filter: drop-shadow(0px 0px 8px rgba(239, 68, 68, 0.6)); transform: scale(1); }}
+            50% {{ filter: drop-shadow(0px 0px 16px rgba(239, 68, 68, 1)); transform: scale(1.05); }}
+            100% {{ filter: drop-shadow(0px 0px 8px rgba(239, 68, 68, 0.6)); transform: scale(1); }}
+        }}
+        .flame-pulse {{
+            animation: pulse-glow 1.5s infinite alternate;
+            display: inline-block;
+        }}
+    </style>
+    
     <div style="display: flex; justify-content: space-between; font-family: 'Inter', sans-serif; margin-bottom: 5px; margin-top: 15px;">
+        <!-- Countdown Card -->
         <div style="background: linear-gradient(135deg, #0B1B3D 0%, #152A55 100%); border: 1px solid #C09B5A; border-radius: 16px; padding: 22px; width: 48%; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.15); box-sizing: border-box; transition: transform 0.3s ease;">
             <h4 style="color: #E2E8F0; margin-top: 0; margin-bottom: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-hourglass-half" style="color: #C09B5A; margin-right: 5px;"></i> AP Calc Exam</h4>
             <h1 id="countdown" style="color: #C09B5A; margin: 0; font-size: 26px; font-weight: 800;"></h1>
             <p style="color: #A0A0A0; margin: 8px 0 0 0; font-size: 12px;">Time Left (May 10)</p>
         </div>
-        <div style="background: linear-gradient(135deg, #0B1B3D 0%, #152A55 100%); border: 1px solid #C09B5A; border-radius: 16px; padding: 22px; width: 48%; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.15); box-sizing: border-box; transition: transform 0.3s ease;">
-            <h4 style="color: #E2E8F0; margin-top: 0; margin-bottom: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-fire" style="color: #C09B5A; margin-right: 5px;"></i> Daily Streak</h4>
-            <h1 style="color: #C09B5A; margin: 0; font-size: 36px; font-weight: 800;">{streak}</h1>
-            <p style="color: #A0A0A0; margin: 8px 0 0 0; font-size: 12px;">Consecutive Days</p>
+        
+        <!-- Dynamic Gamified Streak Card -->
+        <div style="background: linear-gradient(135deg, #0B1B3D 0%, #152A55 100%); border: 1px solid {flame_color}; border-radius: 16px; padding: 22px; width: 48%; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.15); box-sizing: border-box; transition: transform 0.3s ease;">
+            <h4 style="color: #E2E8F0; margin-top: 0; margin-bottom: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">
+                <i class="fa-solid fa-fire {pulse_class}" style="color: {flame_color}; margin-right: 5px; filter: {flame_glow}; transition: 0.3s;"></i> Daily Streak
+            </h4>
+            <h1 style="color: {flame_color}; margin: 0; font-size: 36px; font-weight: 800; text-shadow: {flame_glow};">{streak}</h1>
+            <p style="color: #A0A0A0; margin: 8px 0 0 0; font-size: 12px;">{streak_msg}</p>
         </div>
     </div>
+    
     <script>
         let total_seconds = {total_seconds};
         const countdown_div = document.getElementById("countdown");

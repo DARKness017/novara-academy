@@ -1386,9 +1386,9 @@ def quiz_screen():
             let is_exam = {'true' if is_exam else 'false'};
             const clock_div = document.getElementById("clock");
             
-            // Load the subtle ticking sound into memory
-            const tick_audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2573/2573-preview.mp3");
-            tick_audio.volume = 0.4; // Keep it quiet so it builds tension without being annoying
+            // Google Official UI Sounds: Subtle Mechanical Tick
+            const tick_audio = new Audio("https://actions.google.com/sounds/v1/alarms/mechanical_clock_tick.ogg");
+            tick_audio.volume = 0.3; // Very quiet to build subtle tension
 
             setInterval(() => {{
                 let minutes = Math.floor(time_val / 60);
@@ -1400,9 +1400,9 @@ def quiz_screen():
                 if (is_exam) {{
                     if (time_val <= 300) clock_div.style.color = "#FF4B4B"; // Turns red at 5 mins left
                     
-                    // The 60-second Heartbeat mechanic!
+                    // The 60-second Heartbeat mechanic
                     if (time_val <= 60 && time_val > 0) {{
-                        tick_audio.currentTime = 0; // Reset sound to start
+                        tick_audio.currentTime = 0; 
                         tick_audio.play().catch(e => console.log("Audio blocked by browser")); 
                     }}
                     
@@ -1442,16 +1442,16 @@ def quiz_screen():
         # --- INSTANT FEEDBACK (PRACTICE MODE ONLY) ---
         if not is_exam and st.session_state.checked_answers.get(st.session_state.current_q_index, False):
             if choice_label == q['correct_option']:
-                # Inject a hidden audio player that autoplays a pleasant chime
+                # Google Official UI Sound: Soft Task Completed
                 st.markdown(f"""
-                <audio autoplay style="display:none;"><source src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" type="audio/mpeg"></audio>
+                <audio autoplay style="display:none;"><source src="https://actions.google.com/sounds/v1/ui/task_completed.ogg" type="audio/ogg"></audio>
                 <div style='background-color: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; padding: 14px; border-radius: 8px; color: #22c55e; margin-bottom: 15px;'><b>✅ Correct!</b> Great job.</div>
                 """, unsafe_allow_html=True)
             else:
-                # Inject a hidden audio player that autoplays a soft error thud
+                # Google Official UI Sound: Soft Error Thud
                 correct_text = options[q['correct_option']]
                 st.markdown(f"""
-                <audio autoplay style="display:none;"><source src="https://assets.mixkit.co/active_storage/sfx/2955/2955-preview.mp3" type="audio/mpeg"></audio>
+                <audio autoplay style="display:none;"><source src="https://actions.google.com/sounds/v1/ui/error.ogg" type="audio/ogg"></audio>
                 <div style='background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 15px;'><b>❌ Incorrect.</b><br><br><i class='fa-solid fa-lightbulb' style='color: #eab308;'></i> <b style='color: #eab308;'>Right Answer:</b> <span style='color: #eab308;'>{q['correct_option']}) {correct_text}</span></div>
                 """, unsafe_allow_html=True)
 

@@ -494,15 +494,18 @@ def start_quiz(unit=None, selected_subtopic="All Subtopics"):
     if questions:
         questions = questions[:10]
 
+    # --- SAFETY CHECK ---
     if not questions:
         st.warning(f"No {st.session_state.difficulty} questions found for this selection yet! Please change the difficulty or try another unit.")
         return
         
+    # --- NUKE OLD MEMORY & START FRESH ---
     st.session_state.quiz_questions = questions
+    st.session_state.current_q_index = 0
     st.session_state.quiz_score = 0
     st.session_state.user_answers = []
     st.session_state.current_answers = {}
-    st.session_state.checked_answers = {} # 🆕 Remembers if they checked an answer in Practice Mode
+    st.session_state.checked_answers = {}
     st.session_state.quiz_started = True
     st.session_state.q_start_time = time.time()
     st.session_state.current_screen = "quiz"
@@ -1471,7 +1474,8 @@ def quiz_screen():
             
         elif next_btn:
             st.session_state.current_answers[st.session_state.current_q_index] = choice_label
-            if is_last:
+            # Safety check: if we are at or past the last question, force submission
+            if st.session_state.current_q_index >= len(st.session_state.quiz_questions) - 1:
                 submit_entire_quiz()
             else:
                 st.session_state.current_q_index += 1

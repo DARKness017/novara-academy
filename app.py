@@ -499,10 +499,10 @@ def start_quiz(unit=None, selected_subtopic="All Subtopics"):
         return
         
     st.session_state.quiz_questions = questions
-    st.session_state.current_q_index = 0
     st.session_state.quiz_score = 0
     st.session_state.user_answers = []
     st.session_state.current_answers = {}
+    st.session_state.checked_answers = {} # 🆕 Remembers if they checked an answer in Practice Mode
     st.session_state.quiz_started = True
     st.session_state.q_start_time = time.time()
     st.session_state.current_screen = "quiz"
@@ -1368,99 +1368,112 @@ def quiz_screen():
     st.markdown(f"**Question {st.session_state.current_q_index + 1} of {len(st.session_state.quiz_questions)}** (Unit {q['unit_number']} - {q['difficulty']})")
     
     elapsed = int(time.time() - st.session_state.q_start_time)
+    is_exam = st.session_state.get("quiz_mode") == "Exam Mode"
+    
+    # Exam Mode gives 15 mins (900s). Practice mode just counts up.
+    time_val = max(0, 900 - elapsed) if is_exam else elapsed
+
     components.html(
         f"""
         <div style="font-family: 'Inter', sans-serif; text-align: right; color: #0B1B3D; font-size: 18px; font-weight: bold; margin: 0; padding-right: 10px;">
-            <i class="fa-solid fa-stopwatch" style="color: #0B1B3D;"></i> Time Elapsed: <span id="clock"></span>
+            <i class="fa-solid fa-stopwatch" style="color: #0B1B3D;"></i> Time: <span id="clock"></span>
         </div>
         <script>
-            let time_elapsed = {elapsed};
+            let time_val = {time_val};
+            let is_exam = {'true' if is_exam else 'false'};
             const clock_div = document.getElementById("clock");
             
             setInterval(() => {{
-                let minutes = Math.floor(time_elapsed / 60);
-                let seconds = time_elapsed % 60;
+                let minutes = Math.floor(time_val / 60);
+                let seconds = time_val % 60;
                 
                 let formatted_time = (minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
                 clock_div.innerText = formatted_time;
                 
-                if (time_elapsed > 90) {{
-                    clock_div.style.color = "#FF4B4B";
+                if (is_exam) {{
+                    if (time_val <= 300) clock_div.style.color = "#FF4B4B"; // Turns red at 5 mins left
+                    if (time_val > 0) time_val--;
+                }} else {{
+                    if (time_val > 90) clock_div.style.color = "#eab308"; // Turns yellow after 90s per question
+                    time_val++;
                 }}
-                time_elapsed++;
             }}, 1000);
         </script>
         """,
         height=40
     )
     
-    # --- 📈 NEW: GRAPH / IMAGE RENDERER ---
     if q.get('image_url'):
         st.image(q['image_url'], use_container_width=True)
         
     st.markdown(f"### {q['question_text']}")
     
-    options = {
-        "A": q['option_a'],
-        "B": q['option_b'],
-        "C": q['option_c'],
-        "D": q['option_d']
-    }
+    options = {"A": q['option_a'], "B": q['option_b'], "C": q['option_c'], "D": q['option_d']}
     
-    # Remember previously selected answers if the student goes backwards
     saved_ans = st.session_state.current_answers.get(st.session_state.current_q_index, "A")
     radio_index = ["A", "B", "C", "D"].index(saved_ans)
     
-    # Dynamically generate the form key so it updates properly on navigation
     with st.form(key=f"quiz_form_{st.session_state.current_q_index}"):
         
-        # label_visibility="collapsed" entirely removes the "Select your answer:" text!
         choice_label = st.radio(
             "Answer", 
             ["A", "B", "C", "D"], 
             index=radio_index,
-            format_func=lambda x: f"**{x})** {options[x]}", # ADDED MARKDOWN BOLDING HERE
+            format_func=lambda x: f"**{x})** {options[x]}",
             label_visibility="collapsed"
         )
         
-        st.write("") # Extra padding
+        st.write("") 
         
-        # We shrink the spacer and widen the buttons
-        c1, c_space, c2, c3 = st.columns([2, 3, 2, 2])
-        
-        with c1:
-            quit_btn = st.form_submit_button("Quit Quiz", use_container_width=True)
-            
-        with c2:
-            # Disable the Back button if we are on the very first question
-            back_disabled = (st.session_state.current_q_index == 0)
-            back_btn = st.form_submit_button("Back", disabled=back_disabled, use_container_width=True)
-            
-        with c3:
-            # If we are on the last question, change "Next" to "Submit"
-            is_last = (st.session_state.current_q_index == len(st.session_state.quiz_questions) - 1)
-            next_text = "Submit" if is_last else "Next"
-            next_btn = st.form_submit_button(next_text, type="primary", use_container_width=True)
+        # --- INSTANT FEEDBACK (PRACTICE MODE ONLY) ---
+        if not is_exam and st.session_state.checked_answers.get(st.session_state.current_q_index, False):
+            if choice_label == q['correct_option']:
+                st.markdown(f"<div style='background-color: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; padding: 14px; border-radius: 8px; color: #22c55e; margin-bottom: 15px;'><b>✅ Correct!</b> Great job.</div>", unsafe_allow_html=True)
+            else:
+                correct_text = options[q['correct_option']]
+                st.markdown(f"<div style='background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 15px;'><b>❌ Incorrect.</b><br><br><i class='fa-solid fa-lightbulb' style='color: #eab308;'></i> <b style='color: #eab308;'>Right Answer:</b> <span style='color: #eab308;'>{q['correct_option']}) {correct_text}</span></div>", unsafe_allow_html=True)
 
-        # --- Routing Logic ---
+        # --- DYNAMIC BUTTON LAYOUT ---
+        is_last = (st.session_state.current_q_index == len(st.session_state.quiz_questions) - 1)
+        back_disabled = (st.session_state.current_q_index == 0)
+        check_btn = False
+
+        if is_exam:
+            # EXAM MODE: Quit | Spacer | Back | Next
+            c1, c_space, c2, c3 = st.columns([2, 3, 2, 2])
+            with c1: quit_btn = st.form_submit_button("Quit Quiz", use_container_width=True)
+            with c2: back_btn = st.form_submit_button("Back", disabled=back_disabled, use_container_width=True)
+            with c3: next_btn = st.form_submit_button("Submit" if is_last else "Next", type="primary", use_container_width=True)
+        else:
+            # PRACTICE MODE: Quit | Check Answer | Back | Next
+            c1, c2, c3, c4 = st.columns([2, 2, 2, 2])
+            with c1: quit_btn = st.form_submit_button("Quit Quiz", use_container_width=True)
+            with c2: check_btn = st.form_submit_button("Check Answer", use_container_width=True)
+            with c3: back_btn = st.form_submit_button("Back", disabled=back_disabled, use_container_width=True)
+            with c4: next_btn = st.form_submit_button("Submit" if is_last else "Next", type="primary", use_container_width=True)
+
+        # --- ROUTING LOGIC ---
         if quit_btn:
             st.session_state.quiz_started = False
             st.session_state.current_screen = "dashboard"
             st.rerun()
             
+        elif check_btn:
+            # Save their current answer and mark it as 'checked' so the feedback box appears
+            st.session_state.current_answers[st.session_state.current_q_index] = choice_label
+            st.session_state.checked_answers[st.session_state.current_q_index] = True
+            st.rerun()
+            
         elif back_btn:
-            # Save current answer, move index back 1
             st.session_state.current_answers[st.session_state.current_q_index] = choice_label
             st.session_state.current_q_index -= 1
             st.rerun()
             
         elif next_btn:
-            # Save current answer
             st.session_state.current_answers[st.session_state.current_q_index] = choice_label
             if is_last:
                 submit_entire_quiz()
             else:
-                # Move index forward 1
                 st.session_state.current_q_index += 1
                 st.rerun()
 

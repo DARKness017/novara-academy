@@ -1261,7 +1261,16 @@ def unit_detail_screen():
     subtopic_options = ["All Subtopics"]
     if res.data:
         # Extract unique valid subtopics (ignoring empty/None values)
-        fetched_subs = sorted(list(set([q['subtopic'] for q in res.data if q.get('subtopic')])))
+        unique_subs = list(set([q['subtopic'] for q in res.data if q.get('subtopic')]))
+        
+        # Custom sorting logic to fix the "1.10 comes before 1.2" bug
+        def subtopic_sort_key(s):
+            match = re.match(r"^(\d+)\.(\d+)", s)
+            if match:
+                return (int(match.group(1)), int(match.group(2)), s)
+            return (999, 999, s) # Puts things like "General Practice" safely at the bottom
+            
+        fetched_subs = sorted(unique_subs, key=subtopic_sort_key)
         subtopic_options.extend(fetched_subs)
     
     # Render the sleek dropdown

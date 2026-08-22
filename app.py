@@ -1186,8 +1186,8 @@ def dashboard_screen():
     if lb_attempts_res.data:
         df_lb = pd.DataFrame(lb_attempts_res.data)
         if not df_lb.empty and 'timestamp' in df_lb.columns:
-            # Clean and filter the data
-            df_lb['timestamp'] = pd.to_datetime(df_lb['timestamp'], errors='coerce')
+            # Clean, filter, and convert Leaderboard to Tashkent Time!
+            df_lb['timestamp'] = pd.to_datetime(df_lb['timestamp'], errors='coerce', utc=True).dt.tz_convert(tz)
             df_lb = df_lb[df_lb['is_correct'] == 1] # Only count correct answers (XP)
             
             # Force the monthly leaderboard to reset based on Tashkent time

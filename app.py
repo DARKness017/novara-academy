@@ -434,6 +434,8 @@ if 'hide_guide' not in st.session_state:
     st.session_state.hide_guide = False
 if 'quiz_mode' not in st.session_state:
     st.session_state.quiz_mode = "Exam Mode"
+if 'checked_answers' not in st.session_state:
+    st.session_state.checked_answers = {}
 
 # --- 4. Core Application Logic ---
 def start_quiz(unit=None, selected_subtopic="All Subtopics"):
@@ -532,6 +534,7 @@ def start_saved_quiz():
     st.session_state.current_q_index = 0
     st.session_state.quiz_score = 0
     st.session_state.user_answers = []
+    st.session_state.checked_answers = {}  # 🆕 Fixes the crash!
     st.session_state.quiz_started = True
     st.session_state.q_start_time = time.time()
     st.session_state.current_screen = "quiz"
@@ -778,45 +781,52 @@ def login_screen():
             
             st.write("")
             if st.button("Sign In", type="primary", use_container_width=True):
-                # Reset attempts if the penalty time has officially expired
-                if st.session_state.failed_attempts >= 5 and time.time() > st.session_state.lockout_until:
-                    st.session_state.failed_attempts = 0
-                
-                if time.time() < st.session_state.lockout_until:
-                    remaining_seconds = int(st.session_state.lockout_until - time.time())
-                    st.markdown(f"<div style='background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 15px;'><i class='fa-solid fa-lock'></i> <b>Account temporarily locked.</b> Try again in {remaining_seconds} seconds.</div>", unsafe_allow_html=True)
-                elif login_email and login_password:
+                if login_email and login_password:
                     try:
                         user_record = supabase.table("users").select("*").eq("email", login_email).execute()
                         if user_record.data:
                             user = user_record.data[0]
-                            if bcrypt.checkpw(login_password.encode('utf-8'), user['password_hash'].encode('utf-8')):
-                                st.session_state.failed_attempts = 0
-                                st.session_state.lockout_until = 0
-                                st.session_state.logged_in = True
-                                st.session_state.user_id = user['user_id']
-                                st.session_state.username = user['username']
-                                st.session_state.is_admin = user.get('is_admin', False)
-                                st.session_state.current_screen = "dashboard"
-                                st.success(f"Welcome back, {user['username']}!")
-                                time.sleep(1)
-                                st.rerun()
-                            else:
-                                st.session_state.failed_attempts += 1
-                                if st.session_state.failed_attempts >= 5:
-                                    st.session_state.lockout_until = time.time() + 300 
-                                    st.markdown("<div style='background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 15px;'><i class='fa-solid fa-lock'></i> <b>Too many failed attempts.</b> You are locked out for 5 minutes.</div>", unsafe_allow_html=True)
+                            
+                            # --- 1. DB-LEVEL LOCKOUT CHECK ---
+                            is_locked = False
+                            if user.get('lockout_until'):
+                                lockout_time = pd.to_datetime(user['lockout_until']).timestamp()
+                                if time.time() < lockout_time:
+                                    is_locked = True
+                                    remaining = int(lockout_time - time.time())
+                                    st.markdown(f"<div style='background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 15px;'><i class='fa-solid fa-lock'></i> <b>Account temporarily locked.</b> Try again in {remaining} seconds.</div>", unsafe_allow_html=True)
+                            
+                            # --- 2. PASSWORD CHECK ---
+                            if not is_locked:
+                                if bcrypt.checkpw(login_password.encode('utf-8'), user['password_hash'].encode('utf-8')):
+                                    # Wipe the bad history clean in the database on success
+                                    supabase.table("users").update({"failed_attempts": 0, "lockout_until": None}).eq("email", login_email).execute()
+                                    
+                                    st.session_state.logged_in = True
+                                    st.session_state.user_id = user['user_id']
+                                    st.session_state.username = user['username']
+                                    st.session_state.is_admin = user.get('is_admin', False)
+                                    st.session_state.current_screen = "dashboard"
+                                    st.success(f"Welcome back, {user['username']}!")
+                                    time.sleep(1)
+                                    st.rerun()
                                 else:
-                                    attempts_left = 5 - st.session_state.failed_attempts
-                                    st.error(f"Invalid email or password. ({attempts_left} attempts remaining)")
+                                    # Log the strike in the database
+                                    new_attempts = user.get('failed_attempts', 0) + 1
+                                    update_data = {"failed_attempts": new_attempts}
+                                    
+                                    if new_attempts >= 5:
+                                        # Write a strict UTC 5-minute timeout to the database
+                                        lockout_dt = datetime.now(ZoneInfo("UTC")) + timedelta(minutes=5)
+                                        update_data["lockout_until"] = lockout_dt.isoformat()
+                                        supabase.table("users").update(update_data).eq("email", login_email).execute()
+                                        st.markdown("<div style='background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 15px;'><i class='fa-solid fa-lock'></i> <b>Too many failed attempts.</b> You are locked out for 5 minutes.</div>", unsafe_allow_html=True)
+                                    else:
+                                        supabase.table("users").update(update_data).eq("email", login_email).execute()
+                                        attempts_left = 5 - new_attempts
+                                        st.error(f"Invalid email or password. ({attempts_left} attempts remaining)")
                         else:
-                            st.session_state.failed_attempts += 1
-                            if st.session_state.failed_attempts >= 5:
-                                st.session_state.lockout_until = time.time() + 300
-                                st.markdown("<div style='background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 15px;'><i class='fa-solid fa-lock'></i> <b>Too many failed attempts.</b> You are locked out for 5 minutes.</div>", unsafe_allow_html=True)
-                            else:
-                                attempts_left = 5 - st.session_state.failed_attempts
-                                st.error(f"Invalid email or password. ({attempts_left} attempts remaining)")
+                            st.error("Invalid email or password.")
                     except Exception as e:
                         st.error(f"Error during login: {e}")
                 else:
@@ -841,8 +851,12 @@ def login_screen():
             if st.button("Sign Up", type="primary", use_container_width=True):
                 if reg_username and reg_email and reg_password:
                     email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+                    username_pattern = r"^[A-Za-z0-9 _.'-]{2,40}$" # 🆕 Locks down the allowed characters
+                    
                     if not re.match(email_pattern, reg_email):
                         st.warning("Please enter a valid email address format (e.g., student@example.com).")
+                    elif not re.match(username_pattern, reg_username):
+                        st.warning("Username can only contain letters, numbers, spaces, and basic punctuation (2-40 characters). No HTML tags allowed.")
                     elif len(reg_password) < 8:
                         st.warning("Password must be at least 8 characters long.")
                     else:
@@ -985,9 +999,12 @@ def dashboard_screen():
             unit_stats = {}
             
             for row in response.data:
-                # Daily Streak Calculation
+                # Daily Streak Calculation (Timezone Corrected!)
                 if row.get("timestamp"):
-                    active_dates.add(str(row["timestamp"])[:10])
+                    # Convert Supabase's UTC timestamp string into a real Tashkent date
+                    utc_dt = pd.to_datetime(row["timestamp"], utc=True)
+                    tashkent_dt = utc_dt.tz_convert(tz)
+                    active_dates.add(tashkent_dt.strftime("%Y-%m-%d"))
                 
                 # Unit Accuracy for Trophy Case
                 q_id = row.get("question_id")
@@ -1386,10 +1403,6 @@ def quiz_screen():
             let is_exam = {'true' if is_exam else 'false'};
             const clock_div = document.getElementById("clock");
             
-            // Google Official UI Sounds: Subtle Mechanical Tick
-            const tick_audio = new Audio("https://actions.google.com/sounds/v1/alarms/mechanical_clock_tick.ogg");
-            tick_audio.volume = 0.3; // Very quiet to build subtle tension
-
             setInterval(() => {{
                 let minutes = Math.floor(time_val / 60);
                 let seconds = time_val % 60;
@@ -1399,13 +1412,6 @@ def quiz_screen():
                 
                 if (is_exam) {{
                     if (time_val <= 300) clock_div.style.color = "#FF4B4B"; // Turns red at 5 mins left
-                    
-                    // The 60-second Heartbeat mechanic
-                    if (time_val <= 60 && time_val > 0) {{
-                        tick_audio.currentTime = 0; 
-                        tick_audio.play().catch(e => console.log("Audio blocked by browser")); 
-                    }}
-                    
                     if (time_val > 0) time_val--;
                 }} else {{
                     if (time_val > 90) clock_div.style.color = "#eab308"; // Turns yellow after 90s per question
@@ -1442,18 +1448,10 @@ def quiz_screen():
         # --- INSTANT FEEDBACK (PRACTICE MODE ONLY) ---
         if not is_exam and st.session_state.checked_answers.get(st.session_state.current_q_index, False):
             if choice_label == q['correct_option']:
-                # Google Official UI Sound: Soft Task Completed
-                st.markdown(f"""
-                <audio autoplay style="display:none;"><source src="https://actions.google.com/sounds/v1/ui/task_completed.ogg" type="audio/ogg"></audio>
-                <div style='background-color: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; padding: 14px; border-radius: 8px; color: #22c55e; margin-bottom: 15px;'><b>✅ Correct!</b> Great job.</div>
-                """, unsafe_allow_html=True)
+                st.markdown(f"<div style='background-color: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; padding: 14px; border-radius: 8px; color: #22c55e; margin-bottom: 15px;'><b>✅ Correct!</b> Great job.</div>", unsafe_allow_html=True)
             else:
-                # Google Official UI Sound: Soft Error Thud
                 correct_text = options[q['correct_option']]
-                st.markdown(f"""
-                <audio autoplay style="display:none;"><source src="https://actions.google.com/sounds/v1/ui/error.ogg" type="audio/ogg"></audio>
-                <div style='background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 15px;'><b>❌ Incorrect.</b><br><br><i class='fa-solid fa-lightbulb' style='color: #eab308;'></i> <b style='color: #eab308;'>Right Answer:</b> <span style='color: #eab308;'>{q['correct_option']}) {correct_text}</span></div>
-                """, unsafe_allow_html=True)
+                st.markdown(f"<div style='background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 14px; border-radius: 8px; color: #ef4444; margin-bottom: 15px;'><b>❌ Incorrect.</b><br><br><i class='fa-solid fa-lightbulb' style='color: #eab308;'></i> <b style='color: #eab308;'>Right Answer:</b> <span style='color: #eab308;'>{q['correct_option']}) {correct_text}</span></div>", unsafe_allow_html=True)
 
         # --- DYNAMIC BUTTON LAYOUT ---
         is_last = (st.session_state.current_q_index == len(st.session_state.quiz_questions) - 1)
@@ -1566,6 +1564,7 @@ def analytics_screen():
             ax.spines['polar'].set_color('#C09B5A')
             
             st.pyplot(fig)
+            plt.close(fig) # 🆕 Closes the chart to prevent memory leaks!
             st.write("---")
             
             # Feedback logic

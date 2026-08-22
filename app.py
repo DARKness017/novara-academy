@@ -432,6 +432,8 @@ if 'current_answers' not in st.session_state:
     st.session_state.current_answers = {}
 if 'hide_guide' not in st.session_state:
     st.session_state.hide_guide = False
+if 'quiz_mode' not in st.session_state:
+    st.session_state.quiz_mode = "Exam Mode"
 
 # --- 4. Core Application Logic ---
 def start_quiz(unit=None, selected_subtopic="All Subtopics"):
@@ -933,16 +935,20 @@ def dashboard_screen():
         st.markdown("""
         <div style="background: linear-gradient(135deg, #0B1B3D 0%, #152A55 100%); padding: 25px; border-radius: 16px; border: 1px solid #C09B5A; box-shadow: 0 10px 20px rgba(0,0,0,0.15); margin-bottom: 15px; margin-top: 10px;">
             <h3 style="color: #C09B5A; margin-top: 0; text-align: center; margin-bottom: 20px;"><i class="fa-solid fa-map-location-dot"></i> Welcome to Novara Academy</h3>
-            <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
-                <div style="flex: 1; min-width: 200px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+                <div style="flex: 1 1 45%; min-width: 200px;">
                     <h4 style="color: #FFFFFF; margin-top: 0; font-size: 16px;"><i class="fa-solid fa-brain" style="color: #C09B5A;"></i> Adaptive Engine</h4>
                     <p style="font-size: 13px; color: #94A3B8; line-height: 1.5; margin-bottom: 0;">Click <b>Start Full Adaptive Quiz</b>. The algorithm tracks your unit accuracy and automatically targets your weakest topics to force improvement.</p>
                 </div>
-                <div style="flex: 1; min-width: 200px;">
+                <div style="flex: 1 1 45%; min-width: 200px;">
+                    <h4 style="color: #FFFFFF; margin-top: 0; font-size: 16px;"><i class="fa-solid fa-stopwatch" style="color: #C09B5A;"></i> Practice vs. Exam Mode</h4>
+                    <p style="font-size: 13px; color: #94A3B8; line-height: 1.5; margin-bottom: 0;"><b>Practice Mode</b> gives you instant feedback and a relaxed timer to learn concepts. <b>Exam Mode</b> runs a strict 15-minute clock with zero hints until the end.</p>
+                </div>
+                <div style="flex: 1 1 45%; min-width: 200px;">
                     <h4 style="color: #FFFFFF; margin-top: 0; font-size: 16px;"><i class="fa-solid fa-fire" style="color: #C09B5A;"></i> XP & Streaks</h4>
                     <p style="font-size: 13px; color: #94A3B8; line-height: 1.5; margin-bottom: 0;">Consistency is key. You earn <b>1 XP</b> for every <i>correct</i> answer. Practice daily to build your blazing streak and climb the Leaderboard!</p>
                 </div>
-                <div style="flex: 1; min-width: 200px;">
+                <div style="flex: 1 1 45%; min-width: 200px;">
                     <h4 style="color: #FFFFFF; margin-top: 0; font-size: 16px;"><i class="fa-solid fa-bookmark" style="color: #C09B5A;"></i> The Vault</h4>
                     <p style="font-size: 13px; color: #94A3B8; line-height: 1.5; margin-bottom: 0;">Don't lose hard questions. Click <b>Save to Vault</b> during a quiz review to build a personal bank, then generate custom practice quizzes.</p>
                 </div>
@@ -1292,13 +1298,22 @@ def unit_detail_screen():
         if st.button("Medium", use_container_width=True): st.session_state.difficulty = "Medium"
     with diff_col4:
         if st.button("Hard", use_container_width=True): st.session_state.difficulty = "Hard"
+
+    st.write("---")
+    
+    st.markdown("<h3 style='text-align: center; color: #0B1B3D;'><i class='fa-solid fa-stopwatch' style='color: #C09B5A;'></i> Select Testing Mode</h3>", unsafe_allow_html=True)    
+    mode_col1, mode_col2 = st.columns(2)
+    with mode_col1:
+        if st.button("Exam Mode (Strict Timer, No Hints)", use_container_width=True): st.session_state.quiz_mode = "Exam Mode"
+    with mode_col2:
+        if st.button("Practice Mode (Untimed, Instant Feedback)", use_container_width=True): st.session_state.quiz_mode = "Practice Mode"
         
-    st.info(f"**Current Setting:** Quizzes for this unit will pull **{st.session_state.difficulty}** questions.")
+    st.info(f"**Current Settings:** **{st.session_state.difficulty}** Difficulty | **{st.session_state.quiz_mode}**")
 
     st.write("")
     
     # Change the button text dynamically based on what they selected
-    btn_text = f"Start Quiz: {selected_subtopic}" if selected_subtopic != "All Subtopics" else f"Start Full Unit Quiz"
+    btn_text = f"Start {st.session_state.quiz_mode}: {selected_subtopic}" if selected_subtopic != "All Subtopics" else f"Start Full Unit Quiz ({st.session_state.quiz_mode})"
     
     if st.button(btn_text, type="primary", use_container_width=True):
         start_quiz(unit=unit_num, selected_subtopic=selected_subtopic)

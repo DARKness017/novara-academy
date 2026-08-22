@@ -189,6 +189,11 @@ st.markdown("""
         transform: translateY(-3px) !important; 
         box-shadow: 0 10px 20px rgba(192, 155, 90, 0.18) !important; 
     }
+
+    /* --- 10. HIDE STREAMLIT HEADER ANCHOR LINKS --- */
+    .stMarkdown h1 a, .stMarkdown h2 a, .stMarkdown h3 a, .stMarkdown h4 a {
+        display: none !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
